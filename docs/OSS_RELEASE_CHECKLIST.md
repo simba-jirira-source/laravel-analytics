@@ -1,0 +1,25 @@
+# Open-Source Release Checklist
+
+- [ ] Public GitHub repository
+- [ ] Real working source code
+- [ ] MIT license
+- [ ] Accurate README
+- [ ] Final Composer package name
+- [ ] `composer validate --strict` passes
+- [ ] Pest passes
+- [ ] Pint passes
+- [ ] Static analysis passes
+- [ ] GitHub Actions green
+- [ ] Supported PHP/Laravel versions actually tested
+- [ ] CONTRIBUTING.md
+- [ ] SECURITY.md
+- [ ] CODE_OF_CONDUCT.md
+- [ ] Honest CHANGELOG.md
+- [ ] Privacy documentation
+- [ ] No secrets or `.env` files committed
+- [ ] GitHub Issues enabled
+- [ ] Private vulnerability reporting enabled where available
+- [ ] Dependabot configured
+- [ ] Main branch protection/rulesets configured
+- [ ] Clean Laravel 13 install test passes
+- [ ] Packagist metadata verified before advertising badges/downloads
