@@ -1,76 +1,82 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 1 complete (package foundation). No analytics tracking implemented.
+> **Status:** Phase 2 complete (configuration and persistence). No request tracking implemented.
 >
-> **Last updated:** 2026-08-15
+> **Last updated:** 2026-08-16
 >
 > **Package:** `simba-jirira-source/laravel-analytics` · **Namespace:** `LaravelAnalytics\LaravelAnalytics`
 
 ---
 
-## Phase 1 Report
+## Phase 2 Report
 
 ### What was implemented
 
-Phase 1 normalized the official package skeleton for Laravel Analytics foundation work:
+Phase 2 added the full configuration schema and persistence layer without request tracking or dashboard functionality:
 
-- **Composer metadata** — added `type: library`, description, keywords, and `support` URLs.
-- **`composer verify`** — consolidated gate running `composer validate --strict` plus the full `composer test` pipeline.
-- **Configuration** — renamed to `config/analytics.php` with `analytics.enabled` defaulting to `false`.
-- **Publish tags** — normalized to `analytics`, `analytics-config`, `analytics-migrations`, `analytics-views`, `analytics-lang`, `analytics-assets`.
-- **Routes** — renamed to `routes/web.php` (placeholder route remains commented out).
-- **View/translation namespaces** — normalized to `analytics`.
-- **Artisan command** — replaced skeleton command with `analytics:placeholder` (`AnalyticsPlaceholderCommand`).
-- **Tests** — removed trivial unit test; added meaningful unit and publish-tag feature coverage.
-- **Documentation** — updated README (status/requirements, publish tags), CHANGELOG, AGENTS.md, CONTRIBUTING.md.
-- **PHPStan** — added `--memory-limit=512M` to `composer analyse` for reliable local/Windows execution.
+- **Configuration** — expanded `config/analytics.php` with privacy-conscious defaults for dashboard, tracking, IP banning, privacy, ignored paths, retention, and optional user association.
+- **Runtime dependency** — added `illuminate/database` for Eloquent models and migrations.
+- **Migrations** — four domain tables replacing the skeleton placeholder migration.
+- **Models** — `Visitor`, `PageView`, `AnalyticsError`, `IpBan` with typed casts and relationships.
+- **Factories** — test factories for all models, including inactive/expired states for `IpBan`.
+- **Tests** — config default tests, migration tests, model persistence/cast/relationship tests via `DatabaseTestCase`.
 
-**Not implemented (by design):** analytics tracking, domain migrations/models, middleware, Livewire, dashboard, privacy docs.
+**Not implemented (by design):** middleware, tracking services, error recording, IP ban enforcement, dashboard, Artisan domain commands (`analytics:install`, `analytics:prune`, etc.).
 
 ---
 
-### Files created or changed
+### Migrations / models / configuration added
 
-| Action | Path |
-|--------|------|
-| Created | `config/analytics.php` |
-| Created | `routes/web.php` |
-| Created | `src/Console/Commands/AnalyticsPlaceholderCommand.php` |
-| Created | `tests/Feature/ServiceProviderTest.php` |
-| Created | `tests/Unit/LaravelAnalyticsTest.php` |
-| Deleted | `config/laravel-analytics.php` |
-| Deleted | `routes/laravel-analytics.php` |
-| Deleted | `src/Console/Commands/LaravelAnalyticsCommand.php` |
-| Deleted | `tests/Feature/ExampleTest.php` |
-| Deleted | `tests/Unit/ExampleTest.php` |
-| Modified | `composer.json` |
-| Modified | `composer.lock` |
-| Modified | `src/LaravelAnalyticsServiceProvider.php` |
-| Modified | `lang/en/messages.php` |
-| Modified | `resources/views/placeholder.blade.php` |
-| Modified | `README.md` |
-| Modified | `CHANGELOG.md` |
-| Modified | `AGENTS.md` |
-| Modified | `.github/CONTRIBUTING.md` |
-| Modified | `docs/IMPLEMENTATION_PLAN.md` |
+**Configuration (`config/analytics.php`):**
 
-**Unchanged (Phase 2):** `database/migrations/2026_01_01_000000_create_laravel_analytics_placeholder_table.php`, core `LaravelAnalytics` class, facade, workbench files.
+| Section | Key defaults |
+|---------|----------------|
+| Master switch | `enabled => false` |
+| Dashboard | `enabled => false`, path `analytics`, middleware `['web', 'auth']`, authorization `null` |
+| Tracking | `traffic => false`, `errors => false` |
+| IP banning | `enabled => false`, `blocked_status => 403` |
+| Privacy | `store_raw_ip => false`, `hash_ips => true`, `track_authenticated_users => false` |
+| Ignored | dashboard paths/routes excluded by default |
+| Retention | `days => 90`, all prune flags `true` |
+| User | `model => null` (no host User coupling) |
+
+**Migrations:**
+
+| File | Table |
+|------|-------|
+| `2026_01_01_000001_create_analytics_visitors_table.php` | `analytics_visitors` |
+| `2026_01_01_000002_create_analytics_page_views_table.php` | `analytics_page_views` |
+| `2026_01_01_000003_create_analytics_errors_table.php` | `analytics_errors` |
+| `2026_01_01_000004_create_analytics_ip_bans_table.php` | `analytics_ip_bans` |
+
+**Deleted:** `2026_01_01_000000_create_laravel_analytics_placeholder_table.php`
+
+**Models (`src/Models/`):**
+
+| Model | Table | Notes |
+|-------|-------|-------|
+| `Visitor` | `analytics_visitors` | HasMany page views; datetime casts |
+| `PageView` | `analytics_page_views` | BelongsTo visitor; immutable (`$timestamps = false`) |
+| `AnalyticsError` | `analytics_errors` | Fingerprint + occurrence metadata |
+| `IpBan` | `analytics_ip_bans` | Active/expiry casts |
+
+**Factories (`database/factories/`):** `VisitorFactory`, `PageViewFactory`, `AnalyticsErrorFactory`, `IpBanFactory`
 
 ---
 
-### Architectural decisions (Phase 1)
+### Database decisions
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Namespace | Keep `LaravelAnalytics\LaravelAnalytics\` | Avoid large rename before public release; matches skeleton |
-| Service provider name | Keep `LaravelAnalyticsServiceProvider` | Consistent with retained namespace |
-| Config key / file | `analytics` / `config/analytics.php` | Aligns with master spec |
-| Publish tags | `analytics-*` | Aligns with master spec |
-| Master switch | `analytics.enabled = false` | Safe default before tracking exists |
-| PHP minimum | `^8.3` | CI matrix tests 8.3–8.5; bump to `^8.4` deferred |
-| Pest | Keep `^4.6\|\|^5.0` | Local Pest 4.7.8 passes all gates; Pest 5 upgrade deferred to Phase 10 |
-| Laravel 12 support | Retained | Dual-major support until v1 policy set |
-| Provider rename to `AnalyticsServiceProvider` | Deferred | Would require namespace rename; not needed for foundation |
+| Visits/sessions table | Not added | Not required for current domain model; derivable from page views in Phase 3/4 |
+| User foreign keys | Nullable `user_id` columns, no FK constraint | Avoid coupling to host `users` table |
+| Raw IP storage | Column present, default config omits population | Supports opt-in `store_raw_ip` in Phase 4 |
+| Page view immutability | No `updated_at` on `analytics_page_views` | Append-only event log |
+| Visitor ↔ page view | Optional `visitor_id` FK with `nullOnDelete` | Supports denormalized `visitor_hash` queries |
+| IP address column width | `varchar(45)` | IPv4 and IPv6 |
+| Hash columns | `varchar(64)` | SHA-256 hex |
+| Indexes | Per-table indexes on query columns (dates, hashes, paths, fingerprints, IP+active) | Supports dashboard and retention queries |
+| Test database | SQLite in-memory via Testbench `testbench` connection | Fast, portable package tests |
 
 ---
 
@@ -78,96 +84,86 @@ Phase 1 normalized the official package skeleton for Laravel Analytics foundatio
 
 | File | Coverage |
 |------|----------|
-| `tests/Feature/ServiceProviderTest.php` | Singleton binding, config merge, translations, views, `analytics:placeholder` command, `analytics-config` and `analytics-migrations` publish tags |
-| `tests/Unit/LaravelAnalyticsTest.php` | Direct instantiation, disabled-by-default config |
-| `tests/ArchTest.php` | Unchanged — strict types, security preset, banned functions |
+| `tests/Unit/ConfigTest.php` | Disabled defaults, privacy settings, ignored paths, retention, user model null, config override |
+| `tests/Database/MigrationTest.php` | All four tables created; placeholder removed; visitor FK |
+| `tests/Database/ModelTest.php` | Factory persistence, casts, relationships, IP ban factory states |
+| `tests/DatabaseTestCase.php` | SQLite in-memory + migration loading |
+| `tests/Pest.php` | Separate `DatabaseTestCase` binding for `tests/Database/` |
+| `phpunit.xml.dist` | Added `Database` testsuite |
 
-**Removed:** `tests/Unit/ExampleTest.php` (`expect(true)->toBeTrue()`).
-
-**Suite totals after Phase 1:** 14 tests, 20 assertions (includes arch tests).
+**Suite totals after Phase 2:** 29 tests, 64 assertions.
 
 ---
 
 ### Commands run
 
 ```powershell
-composer update --no-interaction
+composer update illuminate/database --no-interaction
+composer dump-autoload
+composer lint
 composer verify
 ```
 
-`composer verify` executes:
-
-1. `composer validate --strict`
-2. `composer test` → `@analyse`, `@lint:check`, `@test:types`, `@test:unit`
-
 ---
 
-### Test results
+### Results
 
 | Gate | Result |
 |------|--------|
 | `composer validate --strict` | Passed |
-| PHPStan (level 7) | Passed (0 errors, 512M memory limit) |
-| Pint (`--test`) | Passed |
+| PHPStan (level 7) | Passed |
+| Pint | Passed |
 | Pest type coverage | 100% |
-| Pest test suite | **14 passed** (4772 ms) |
+| Pest test suite | **29 passed** (5975 ms) |
 
 ---
 
-### Remaining risks or blockers
+### Remaining risks
 
 | Item | Status |
 |------|--------|
-| Packagist publication | Blocker for public install — maintainer action (Phase 11) |
-| Placeholder migration | `laravel_analytics_placeholder` table remains; replaced in Phase 2 |
-| Pest 5 baseline | Not upgraded; spec prefers 5+ — address in Phase 10 |
-| PHP 8.4 minimum | Spec prefers 8.4+; kept 8.3 for CI matrix compatibility |
-| Premature OSS docs | PRIVACY, ARCHITECTURE, CoC, PR template — Phase 9 |
-| Livewire | Not installed — Phase 8 |
-| Namespace verbosity | Accepted for 0.x; revisit before 1.0 |
+| No request tracking yet | Expected — Phase 3 |
+| Config keys unused until later phases | Expected — services read them in Phases 3–8 |
+| `hash_salt` resolution logic not implemented | Phase 4 visitor identification |
+| Dashboard authorization mechanism unset (`null`) | Phase 8 |
+| Multi-database / non-relational support | Out of scope; SQLite + common SQL targets only |
+| Published migration upgrades for early adopters | Document in Phase 9 if schema changes |
 
-**No blockers prevent Phase 2.**
+**No blockers prevent Phase 3.**
 
 ---
 
-### Phase 2 readiness
+### Phase 3 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| Package boots via discovery | Ready |
-| `config/analytics.php` exists with safe defaults | Ready — extend with privacy/tracking keys in Phase 2 |
-| Publish tags for config/migrations | Ready and tested |
+| Domain schema and models | Ready |
+| Privacy-conscious config defaults | Ready |
+| `analytics.enabled` master switch | Ready |
+| Ignored paths include dashboard routes | Ready |
+| Page view / visitor tables | Ready for middleware persistence |
+| Factories for test data | Ready |
 | Quality gates green | Ready |
-| Placeholder migration | Present — replace with domain tables in Phase 2 |
-| Service provider wiring pattern | Ready for models, factories, extended config |
 
-**Phase 2 scope:** implement full `config/analytics.php`, domain migrations (`analytics_page_views`, `analytics_visitors`, `analytics_errors`, `analytics_ip_bans`), models, casts, indexes, factories, and database tests. No request tracking yet.
+**Phase 3 scope:** traffic tracking middleware and services — record page views, respect exclusions, capture status/duration, no dashboard self-tracking. No visitor hashing logic beyond schema (Phase 4).
 
 ---
 
-## Phase 0 Report (archived summary)
+## Phase 1 Report (archived summary)
 
-Discovery confirmed a configured Laravel official package skeleton. See git history / prior plan version for full Phase 0 audit. Key findings carried forward:
-
-- Repository is a reusable Composer package with Testbench workbench.
-- Product analytics not yet implemented.
-- Master spec conflicts documented and partially resolved in Phase 1 (config/tags/metadata).
+Normalized package skeleton: Composer metadata, `composer verify`, `analytics-*` publish tags, `config/analytics.php` master switch, baseline provider tests. See git history for full file list.
 
 ---
 
 ## Current state (summary)
 
-Package foundation normalized: Composer metadata complete, `analytics-*` conventions in place, disabled-by-default config, baseline tests prove provider wiring and publishing. Placeholder migration and empty core class remain for Phase 2+.
+Configuration and persistence layer complete. Four analytics tables with Eloquent models and factories. All features disabled by default in config. No HTTP tracking, error recording, IP ban middleware, or dashboard.
 
 ---
 
 ## Target architecture (summary)
 
-Self-hosted first-party analytics for Laravel 13+ with optional Livewire 4 dashboard. Layers: middleware → services/contracts → Eloquent → optional UI. Privacy-conscious defaults, opt-in IP banning, safe error recording, retention pruning, protected dashboard.
-
-```
-Request → exclusions → optional ban middleware → app → response → analytics capture → persistence
-```
+Self-hosted first-party analytics for Laravel 13+ with optional Livewire 4 dashboard. Layers: middleware → services/contracts → Eloquent → optional UI.
 
 ---
 
@@ -176,12 +172,12 @@ Request → exclusions → optional ban middleware → app → response → anal
 | Decision | Choice |
 |----------|--------|
 | Foundation | Official Laravel package skeleton |
-| Runtime Laravel | `illuminate/support` ^12\|\|^13 |
-| PHP | `^8.3` (Phase 1; consider `^8.4` when dropping 8.3 from CI) |
+| Runtime | `illuminate/database` ^12\|\|^13, `illuminate/support` ^12\|\|^13 |
+| PHP | `^8.3` |
 | Testbench | ^10 (L12) / ^11 (L13) |
-| Pest | ^4.6\|\|^5.0 (Pest 4 verified locally) |
+| Pest | ^4.6\|\|^5.0 |
 | Static analysis | Larastan ^3.9, level 7 |
-| Livewire | ^4 — Phase 8 (`require-dev` when added) |
+| Livewire | ^4 — Phase 8 |
 
 ---
 
@@ -190,9 +186,9 @@ Request → exclusions → optional ban middleware → app → response → anal
 | Phase | Scope | Status |
 |-------|-------|--------|
 | **0** | Discovery | Complete |
-| **1** | Package foundation | **Complete** |
-| **2** | Config + database | Next |
-| **3** | Traffic analytics | Pending |
+| **1** | Package foundation | Complete |
+| **2** | Config + database | **Complete** |
+| **3** | Traffic analytics | Next |
 | **4** | Visitor analytics | Pending |
 | **5** | Error analytics | Pending |
 | **6** | IP banning | Pending |
@@ -205,18 +201,17 @@ Request → exclusions → optional ban middleware → app → response → anal
 
 ---
 
-## Unresolved decisions (post Phase 1)
+## Unresolved decisions
 
-1. **Namespace rename** — defer until pre-1.0 or maintainer request.
+1. **Namespace rename** — defer until pre-1.0.
 2. **PHP minimum 8.4** — defer until CI drops 8.3.
-3. **Pest 5 pin** — defer to Phase 10 CI hardening.
-4. **Laravel 12 support window** — maintain through 0.x unless decided otherwise.
-5. **Livewire dependency class** — `require-dev` + `suggest` vs `require` (Phase 8).
-6. **Authenticated user tracking model** — Phase 4.
-7. **Visits/sessions table** — Phase 3/4 if domain requires it.
+3. **Pest 5 pin** — Phase 10.
+4. **Livewire dependency class** — Phase 8.
+5. **Visitor identification algorithm** — Phase 4.
+6. **Queue-backed recording** — optional future enhancement.
 
 ---
 
 ## Next step
 
-**Phase 2 — Configuration and persistence** — await explicit go-ahead. Do not implement until requested.
+**Phase 3 — Traffic analytics** — await explicit go-ahead. Do not implement until requested.

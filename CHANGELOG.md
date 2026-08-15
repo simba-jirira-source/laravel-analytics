@@ -4,11 +4,15 @@
 
 ### Added
 
+- Full `config/analytics.php` with privacy-conscious defaults for tracking, dashboard, IP banning, and retention.
+- Domain migrations and Eloquent models: `analytics_visitors`, `analytics_page_views`, `analytics_errors`, `analytics_ip_bans`.
+- Model factories and database test coverage.
 - Package foundation: Composer metadata, `composer verify`, and normalized `analytics-*` publish tags.
-- Disabled-by-default `config/analytics.php` master switch placeholder.
 
 ### Changed
 
+- Added `illuminate/database` runtime dependency for persistence layer.
+- Replaced skeleton placeholder migration with domain schema.
 - Renamed configuration from `laravel-analytics.php` to `analytics.php`.
 - Renamed routes file to `routes/web.php` and normalized view/translation namespaces to `analytics`.
 - Replaced skeleton placeholder command with `analytics:placeholder`.
