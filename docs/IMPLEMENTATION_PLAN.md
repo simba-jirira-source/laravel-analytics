@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 2 complete (configuration and persistence). No request tracking implemented.
+> **Status:** Phase 3 complete (traffic analytics). No visitor analytics, error tracking, IP banning, or dashboard.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,75 +8,72 @@
 
 ---
 
-## Phase 2 Report
+## Phase 3 Report
 
 ### What was implemented
 
-Phase 2 added the full configuration schema and persistence layer without request tracking or dashboard functionality:
+Phase 3 added HTTP traffic/page-view tracking with safe exclusions and privacy-conscious recording:
 
-- **Configuration** — expanded `config/analytics.php` with privacy-conscious defaults for dashboard, tracking, IP banning, privacy, ignored paths, retention, and optional user association.
-- **Runtime dependency** — added `illuminate/database` for Eloquent models and migrations.
-- **Migrations** — four domain tables replacing the skeleton placeholder migration.
-- **Models** — `Visitor`, `PageView`, `AnalyticsError`, `IpBan` with typed casts and relationships.
-- **Factories** — test factories for all models, including inactive/expired states for `IpBan`.
-- **Tests** — config default tests, migration tests, model persistence/cast/relationship tests via `DatabaseTestCase`.
+- **`TrackTrafficMiddleware`** — measures request duration and records page views after the response; fails silently on persistence errors.
+- **`PageViewRecorder`** — persists `PageView` records and minimal supporting `Visitor` rows.
+- **`RequestExclusionChecker`** — centralizes enabled/disabled, ignored path/route/method, and excluded status code logic.
+- **`DefaultVisitorIdentifier`** — minimal SHA-256 visitor hash and IP hash (supporting infrastructure only; full visitor analytics deferred to Phase 4).
+- **Contracts** — `AnalyticsRecorder`, `VisitorIdentifier` for extension points.
+- **Service provider** — container bindings, middleware alias `analytics.track-traffic`, auto-push to `web` group when tracking enabled.
+- **Dependencies** — `illuminate/http`, `illuminate/routing`.
 
-**Not implemented (by design):** middleware, tracking services, error recording, IP ban enforcement, dashboard, Artisan domain commands (`analytics:install`, `analytics:prune`, etc.).
-
----
-
-### Migrations / models / configuration added
-
-**Configuration (`config/analytics.php`):**
-
-| Section | Key defaults |
-|---------|----------------|
-| Master switch | `enabled => false` |
-| Dashboard | `enabled => false`, path `analytics`, middleware `['web', 'auth']`, authorization `null` |
-| Tracking | `traffic => false`, `errors => false` |
-| IP banning | `enabled => false`, `blocked_status => 403` |
-| Privacy | `store_raw_ip => false`, `hash_ips => true`, `track_authenticated_users => false` |
-| Ignored | dashboard paths/routes excluded by default |
-| Retention | `days => 90`, all prune flags `true` |
-| User | `model => null` (no host User coupling) |
-
-**Migrations:**
-
-| File | Table |
-|------|-------|
-| `2026_01_01_000001_create_analytics_visitors_table.php` | `analytics_visitors` |
-| `2026_01_01_000002_create_analytics_page_views_table.php` | `analytics_page_views` |
-| `2026_01_01_000003_create_analytics_errors_table.php` | `analytics_errors` |
-| `2026_01_01_000004_create_analytics_ip_bans_table.php` | `analytics_ip_bans` |
-
-**Deleted:** `2026_01_01_000000_create_laravel_analytics_placeholder_table.php`
-
-**Models (`src/Models/`):**
-
-| Model | Table | Notes |
-|-------|-------|-------|
-| `Visitor` | `analytics_visitors` | HasMany page views; datetime casts |
-| `PageView` | `analytics_page_views` | BelongsTo visitor; immutable (`$timestamps = false`) |
-| `AnalyticsError` | `analytics_errors` | Fingerprint + occurrence metadata |
-| `IpBan` | `analytics_ip_bans` | Active/expiry casts |
-
-**Factories (`database/factories/`):** `VisitorFactory`, `PageViewFactory`, `AnalyticsErrorFactory`, `IpBanFactory`
+**Not implemented (by design):** visitor analytics beyond minimal hash/upsert, error tracking, IP ban middleware, dashboard, queue-backed recording, `analytics:install`.
 
 ---
 
-### Database decisions
+### Files created or changed
+
+| Action | Path |
+|--------|------|
+| Created | `src/Contracts/AnalyticsRecorder.php` |
+| Created | `src/Contracts/VisitorIdentifier.php` |
+| Created | `src/Http/Middleware/TrackTrafficMiddleware.php` |
+| Created | `src/Services/PageViewRecorder.php` |
+| Created | `src/Support/RequestExclusionChecker.php` |
+| Created | `src/Support/DefaultVisitorIdentifier.php` |
+| Created | `tests/TrackingTestCase.php` |
+| Created | `tests/Tracking/TrackTrafficTest.php` |
+| Created | `tests/Unit/RequestExclusionCheckerTest.php` |
+| Created | `tests/Unit/DefaultVisitorIdentifierTest.php` |
+| Modified | `src/LaravelAnalyticsServiceProvider.php` |
+| Modified | `composer.json` |
+| Modified | `tests/Pest.php` |
+| Modified | `phpunit.xml.dist` |
+| Modified | `CHANGELOG.md` |
+| Modified | `docs/IMPLEMENTATION_PLAN.md` |
+
+---
+
+### Architectural decisions
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Visits/sessions table | Not added | Not required for current domain model; derivable from page views in Phase 3/4 |
-| User foreign keys | Nullable `user_id` columns, no FK constraint | Avoid coupling to host `users` table |
-| Raw IP storage | Column present, default config omits population | Supports opt-in `store_raw_ip` in Phase 4 |
-| Page view immutability | No `updated_at` on `analytics_page_views` | Append-only event log |
-| Visitor ↔ page view | Optional `visitor_id` FK with `nullOnDelete` | Supports denormalized `visitor_hash` queries |
-| IP address column width | `varchar(45)` | IPv4 and IPv6 |
-| Hash columns | `varchar(64)` | SHA-256 hex |
-| Indexes | Per-table indexes on query columns (dates, hashes, paths, fingerprints, IP+active) | Supports dashboard and retention queries |
-| Test database | SQLite in-memory via Testbench `testbench` connection | Fast, portable package tests |
+| Recording timing | Synchronous after response | Spec requires correct sync default; queue optional later |
+| Persistence failure | Swallowed in middleware | Must not break application responses |
+| Visitor rows | Minimal create/update on each hit | Required for `visitor_id` FK; full visitor analytics in Phase 4 |
+| Visitor hash | IP + optional UA + salt via `DefaultVisitorIdentifier` | Phase 3 infrastructure only; replaceable via contract |
+| Raw IP on page views | Not stored on page view model | Only visitor row receives optional IP/hash per privacy config |
+| Sensitive data | Only safe request metadata persisted | No body, cookies, headers (except referer/UA per config) |
+| Middleware registration | Alias + conditional `web` group push | Host apps can also attach `analytics.track-traffic` manually |
+| Dashboard self-exclusion | Default ignored paths/routes in config | Prevents self-tracking loops |
+
+**Request pipeline (implemented):**
+
+```
+Request
+  → TrackTrafficMiddleware (if enabled)
+  → application
+  → response
+  → exclusion checks
+  → PageViewRecorder
+  → Visitor upsert + PageView create
+  → response returned
+```
 
 ---
 
@@ -84,21 +81,18 @@ Phase 2 added the full configuration schema and persistence layer without reques
 
 | File | Coverage |
 |------|----------|
-| `tests/Unit/ConfigTest.php` | Disabled defaults, privacy settings, ignored paths, retention, user model null, config override |
-| `tests/Database/MigrationTest.php` | All four tables created; placeholder removed; visitor FK |
-| `tests/Database/ModelTest.php` | Factory persistence, casts, relationships, IP ban factory states |
-| `tests/DatabaseTestCase.php` | SQLite in-memory + migration loading |
-| `tests/Pest.php` | Separate `DatabaseTestCase` binding for `tests/Database/` |
-| `phpunit.xml.dist` | Added `Database` testsuite |
+| `tests/Tracking/TrackTrafficTest.php` | Enabled/disabled tracking, ignored path/route/method, dashboard exclusion, status code, duration, referrer, no sensitive payload persistence, excluded status codes |
+| `tests/Unit/RequestExclusionCheckerTest.php` | Wildcard paths, route patterns, methods, status exclusions, full request evaluation |
+| `tests/Unit/DefaultVisitorIdentifierTest.php` | Stable hash, no raw IP in identifier, IP hash toggle |
 
-**Suite totals after Phase 2:** 29 tests, 64 assertions.
+**Suite totals after Phase 3:** 50 tests, 119 assertions.
 
 ---
 
 ### Commands run
 
 ```powershell
-composer update illuminate/database --no-interaction
+composer update illuminate/http illuminate/routing --no-interaction
 composer dump-autoload
 composer lint
 composer verify
@@ -114,7 +108,7 @@ composer verify
 | PHPStan (level 7) | Passed |
 | Pint | Passed |
 | Pest type coverage | 100% |
-| Pest test suite | **29 passed** (5975 ms) |
+| Pest test suite | **50 passed** (10751 ms) |
 
 ---
 
@@ -122,48 +116,47 @@ composer verify
 
 | Item | Status |
 |------|--------|
-| No request tracking yet | Expected — Phase 3 |
-| Config keys unused until later phases | Expected — services read them in Phases 3–8 |
-| `hash_salt` resolution logic not implemented | Phase 4 visitor identification |
-| Dashboard authorization mechanism unset (`null`) | Phase 8 |
-| Multi-database / non-relational support | Out of scope; SQLite + common SQL targets only |
-| Published migration upgrades for early adopters | Document in Phase 9 if schema changes |
+| Visitor identification is minimal | Phase 4 must expand strategy, tests, and docs |
+| Synchronous recording under load | Acceptable for v1; monitor in Phase 12 |
+| Middleware auto-push requires config at boot | Host apps caching config need standard Laravel config caching workflow |
+| No queue fallback yet | Optional future enhancement |
+| Error/ban middleware not registered | Expected — Phases 5–6 |
+| Testbench requires explicit middleware on routes | Production uses `web` group push; tests use explicit route middleware |
 
-**No blockers prevent Phase 3.**
+**No blockers prevent Phase 4.**
 
 ---
 
-### Phase 3 readiness
+### Phase 4 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| Domain schema and models | Ready |
-| Privacy-conscious config defaults | Ready |
-| `analytics.enabled` master switch | Ready |
-| Ignored paths include dashboard routes | Ready |
-| Page view / visitor tables | Ready for middleware persistence |
-| Factories for test data | Ready |
-| Quality gates green | Ready |
+| Page views recording with `visitor_hash` | Ready |
+| Visitor model/table with IP/UA fields | Ready |
+| `VisitorIdentifier` contract + default impl | Ready to extend/replace |
+| Privacy config keys (`store_raw_ip`, `hash_ips`, etc.) | Ready — logic partially used; Phase 4 completes |
+| Traffic tracking tests green | Ready |
+| Repeat vs unique visitor queries | Needs Phase 4 services/tests |
 
-**Phase 3 scope:** traffic tracking middleware and services — record page views, respect exclusions, capture status/duration, no dashboard self-tracking. No visitor hashing logic beyond schema (Phase 4).
+**Phase 4 scope:** visitor identification strategy, privacy controls (raw IP omission, IPv4/IPv6), unique/repeat visitor behaviour, hashed identifier tests, documentation of limitations.
+
+---
+
+## Phase 2 Report (archived summary)
+
+Configuration and persistence: four analytics tables, Eloquent models, factories, full `config/analytics.php`. See git history for details.
 
 ---
 
 ## Phase 1 Report (archived summary)
 
-Normalized package skeleton: Composer metadata, `composer verify`, `analytics-*` publish tags, `config/analytics.php` master switch, baseline provider tests. See git history for full file list.
+Package foundation normalized: Composer metadata, `analytics-*` conventions, baseline provider tests.
 
 ---
 
 ## Current state (summary)
 
-Configuration and persistence layer complete. Four analytics tables with Eloquent models and factories. All features disabled by default in config. No HTTP tracking, error recording, IP ban middleware, or dashboard.
-
----
-
-## Target architecture (summary)
-
-Self-hosted first-party analytics for Laravel 13+ with optional Livewire 4 dashboard. Layers: middleware → services/contracts → Eloquent → optional UI.
+Traffic tracking works when `analytics.enabled` and `analytics.tracking.traffic` are true. Page views record path, method, route name, status, duration, referrer (when enabled), and visitor hash. Dashboard routes excluded by default. No error tracking, IP banning, or Livewire dashboard.
 
 ---
 
@@ -171,13 +164,10 @@ Self-hosted first-party analytics for Laravel 13+ with optional Livewire 4 dashb
 
 | Decision | Choice |
 |----------|--------|
-| Foundation | Official Laravel package skeleton |
-| Runtime | `illuminate/database` ^12\|\|^13, `illuminate/support` ^12\|\|^13 |
+| Runtime | `illuminate/database`, `illuminate/http`, `illuminate/routing`, `illuminate/support` ^12\|\|^13 |
 | PHP | `^8.3` |
-| Testbench | ^10 (L12) / ^11 (L13) |
+| Testbench | ^10 / ^11 |
 | Pest | ^4.6\|\|^5.0 |
-| Static analysis | Larastan ^3.9, level 7 |
-| Livewire | ^4 — Phase 8 |
 
 ---
 
@@ -187,9 +177,9 @@ Self-hosted first-party analytics for Laravel 13+ with optional Livewire 4 dashb
 |-------|-------|--------|
 | **0** | Discovery | Complete |
 | **1** | Package foundation | Complete |
-| **2** | Config + database | **Complete** |
-| **3** | Traffic analytics | Next |
-| **4** | Visitor analytics | Pending |
+| **2** | Config + database | Complete |
+| **3** | Traffic analytics | **Complete** |
+| **4** | Visitor analytics | Next |
 | **5** | Error analytics | Pending |
 | **6** | IP banning | Pending |
 | **7** | Retention | Pending |
@@ -201,17 +191,6 @@ Self-hosted first-party analytics for Laravel 13+ with optional Livewire 4 dashb
 
 ---
 
-## Unresolved decisions
-
-1. **Namespace rename** — defer until pre-1.0.
-2. **PHP minimum 8.4** — defer until CI drops 8.3.
-3. **Pest 5 pin** — Phase 10.
-4. **Livewire dependency class** — Phase 8.
-5. **Visitor identification algorithm** — Phase 4.
-6. **Queue-backed recording** — optional future enhancement.
-
----
-
 ## Next step
 
-**Phase 3 — Traffic analytics** — await explicit go-ahead. Do not implement until requested.
+**Phase 4 — Visitor analytics** — await explicit go-ahead. Do not implement until requested.
