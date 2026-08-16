@@ -1,11 +1,35 @@
 # Release Notes
 
-## v0.5.0 - 2026-08-16
-
-<!-- Release notes generated using configuration in .github/release.yml at v0.5.0 -->
-**Full Changelog**: https://github.com/simba-jirira-source/laravel-analytics/commits/v0.5.0
-
 ## [Unreleased]
+
+## [0.6.0](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.6.0) - TBD
+
+Foundation cleanup before 1.0: namespace migration, database portability CI, performance hardening, release workflow repair, and dependency security auditing.
+
+### Added
+
+- Cross-database integration tests for SQLite, MySQL, and PostgreSQL (`tests/DatabaseIntegration/*`, `database.yml` workflow).
+- `DatabaseSqlHelper` for driver-aware dashboard date SQL.
+- Configurable dashboard aggregate caching via `dashboard.cache_ttl` (default `0`, disabled).
+- Configurable retention delete batching via `retention.chunk_size` (default `1000`).
+- Composite index on `analytics_page_views (viewed_at, visitor_hash)` for dashboard queries.
+- Dedicated `security.yml` workflow and `composer audit` in `composer verify`.
+- `docs/V0_6_0_READINESS_REPORT.md`.
+
+### Changed
+
+- **Breaking:** PHP namespace migrated from `LaravelAnalytics\LaravelAnalytics\` to `SimbaJirira\LaravelAnalytics\`.
+- **Breaking:** Service provider renamed to `SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider`.
+- **Breaking:** Removed empty `LaravelAnalytics` facade and root service class; use contracts, config, and container bindings instead.
+- `AnalyticsPruner` deletes stale rows in bounded batches instead of single large deletes.
+- `AnalyticsDashboardQuery` uses driver-aware SQL for traffic trends and distinct visitor-day counts.
+- Release workflow runs quality gates (including `composer audit`) before publishing and uses CHANGELOG sections for GitHub Release bodies.
+- README updated with Packagist badge, current release status, PHP/Laravel support, and CI badges.
+
+### Removed
+
+- `LaravelAnalytics` facade alias and empty facade/service class.
+- `update-changelog.yml` workflow that duplicated CHANGELOG sections after each release.
 
 ## [0.5.0](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0) - 2026-08-16
 
