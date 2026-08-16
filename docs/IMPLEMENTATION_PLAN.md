@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 3 complete (traffic analytics). No visitor analytics, error tracking, IP banning, or dashboard.
+> **Status:** Phase 4 complete (visitor analytics). No error tracking, IP banning, or dashboard.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,21 +8,55 @@
 
 ---
 
-## Phase 3 Report
+## Phase 4 Report
 
 ### What was implemented
 
-Phase 3 added HTTP traffic/page-view tracking with safe exclusions and privacy-conscious recording:
+Phase 4 expanded visitor analytics and privacy-aware identification while preserving the Phase 3 traffic pipeline:
 
-- **`TrackTrafficMiddleware`** — measures request duration and records page views after the response; fails silently on persistence errors.
-- **`PageViewRecorder`** — persists `PageView` records and minimal supporting `Visitor` rows.
-- **`RequestExclusionChecker`** — centralizes enabled/disabled, ignored path/route/method, and excluded status code logic.
-- **`DefaultVisitorIdentifier`** — minimal SHA-256 visitor hash and IP hash (supporting infrastructure only; full visitor analytics deferred to Phase 4).
-- **Contracts** — `AnalyticsRecorder`, `VisitorIdentifier` for extension points.
-- **Service provider** — container bindings, middleware alias `analytics.track-traffic`, auto-push to `web` group when tracking enabled.
-- **Dependencies** — `illuminate/http`, `illuminate/routing`.
+- **`VisitorService`** — upserts visitors, preserves `first_seen_at`, updates `last_seen_at`, applies privacy rules for IP/UA/user association.
+- **`VisitorAnalytics`** — unique/repeat visitor counting and repeat detection via page view activity.
+- **`DefaultVisitorIdentifier` (enhanced)** — salt + normalized IP + optional UA + optional authenticated user ID; never IP alone.
+- **`IpAddressNormalizer`** — IPv4, IPv6, and IPv4-mapped IPv6 normalization.
+- **`AnalyticsHashSalt`** — resolves `analytics.privacy.hash_salt` or `app.key`.
+- **`analytics.visitor_identifier` config** — replaceable identifier binding.
+- **`docs/VISITOR_IDENTIFICATION.md`** — strategy, replacement instructions, known limitations.
 
-**Not implemented (by design):** visitor analytics beyond minimal hash/upsert, error tracking, IP ban middleware, dashboard, queue-backed recording, `analytics:install`.
+**Not implemented (by design):** error tracking, IP ban middleware, dashboard, bot filtering, cookies, queue-backed recording.
+
+---
+
+### Visitor identification strategy
+
+The default identifier produces a one-way SHA-256 hash from:
+
+1. Application salt (`analytics.privacy.hash_salt` → `app.key` fallback)
+2. Normalized client IP (IPv4 / IPv6 / mapped IPv6)
+3. User agent (when `analytics.privacy.collect_user_agent` is true)
+4. Authenticated user ID (when `analytics.privacy.track_authenticated_users` is true)
+
+No cookies. Raw inputs are not stored in the hash. Replace via `analytics.visitor_identifier` implementing `VisitorIdentifier`.
+
+**Unique vs repeat:**
+
+- **Unique** — distinct `analytics_visitors` rows
+- **Repeat** — visitors with ≥ 2 page views
+
+See [`docs/VISITOR_IDENTIFICATION.md`](VISITOR_IDENTIFICATION.md).
+
+---
+
+### Privacy decisions
+
+| Setting | Default | Behaviour |
+|---------|---------|-----------|
+| `store_raw_ip` | `false` | `ip_address` null unless explicitly enabled |
+| `hash_ips` | `true` | Separate `ip_hash` on visitor when enabled |
+| `hash_salt` | `null` | Falls back to `app.key` |
+| `collect_user_agent` | `true` | UA in hash + optional visitor storage |
+| `track_authenticated_users` | `false` | User ID omitted from hash and records unless enabled |
+
+Page views inherit `user_id` from the resolved visitor record. No request bodies, cookies, tokens, or auth headers are persisted.
 
 ---
 
@@ -30,50 +64,21 @@ Phase 3 added HTTP traffic/page-view tracking with safe exclusions and privacy-c
 
 | Action | Path |
 |--------|------|
-| Created | `src/Contracts/AnalyticsRecorder.php` |
-| Created | `src/Contracts/VisitorIdentifier.php` |
-| Created | `src/Http/Middleware/TrackTrafficMiddleware.php` |
-| Created | `src/Services/PageViewRecorder.php` |
-| Created | `src/Support/RequestExclusionChecker.php` |
-| Created | `src/Support/DefaultVisitorIdentifier.php` |
-| Created | `tests/TrackingTestCase.php` |
-| Created | `tests/Tracking/TrackTrafficTest.php` |
-| Created | `tests/Unit/RequestExclusionCheckerTest.php` |
-| Created | `tests/Unit/DefaultVisitorIdentifierTest.php` |
+| Created | `src/Services/VisitorService.php` |
+| Created | `src/Services/VisitorAnalytics.php` |
+| Created | `src/Support/AnalyticsHashSalt.php` |
+| Created | `src/Support/IpAddressNormalizer.php` |
+| Created | `docs/VISITOR_IDENTIFICATION.md` |
+| Created | `tests/Unit/IpAddressNormalizerTest.php` |
+| Created | `tests/Database/VisitorAnalyticsTest.php` |
+| Created | `tests/Tracking/VisitorTrackingTest.php` |
+| Modified | `src/Support/DefaultVisitorIdentifier.php` |
+| Modified | `src/Services/PageViewRecorder.php` |
 | Modified | `src/LaravelAnalyticsServiceProvider.php` |
-| Modified | `composer.json` |
-| Modified | `tests/Pest.php` |
-| Modified | `phpunit.xml.dist` |
+| Modified | `config/analytics.php` |
+| Modified | `tests/Unit/DefaultVisitorIdentifierTest.php` |
 | Modified | `CHANGELOG.md` |
 | Modified | `docs/IMPLEMENTATION_PLAN.md` |
-
----
-
-### Architectural decisions
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Recording timing | Synchronous after response | Spec requires correct sync default; queue optional later |
-| Persistence failure | Swallowed in middleware | Must not break application responses |
-| Visitor rows | Minimal create/update on each hit | Required for `visitor_id` FK; full visitor analytics in Phase 4 |
-| Visitor hash | IP + optional UA + salt via `DefaultVisitorIdentifier` | Phase 3 infrastructure only; replaceable via contract |
-| Raw IP on page views | Not stored on page view model | Only visitor row receives optional IP/hash per privacy config |
-| Sensitive data | Only safe request metadata persisted | No body, cookies, headers (except referer/UA per config) |
-| Middleware registration | Alias + conditional `web` group push | Host apps can also attach `analytics.track-traffic` manually |
-| Dashboard self-exclusion | Default ignored paths/routes in config | Prevents self-tracking loops |
-
-**Request pipeline (implemented):**
-
-```
-Request
-  → TrackTrafficMiddleware (if enabled)
-  → application
-  → response
-  → exclusion checks
-  → PageViewRecorder
-  → Visitor upsert + PageView create
-  → response returned
-```
 
 ---
 
@@ -81,19 +86,18 @@ Request
 
 | File | Coverage |
 |------|----------|
-| `tests/Tracking/TrackTrafficTest.php` | Enabled/disabled tracking, ignored path/route/method, dashboard exclusion, status code, duration, referrer, no sensitive payload persistence, excluded status codes |
-| `tests/Unit/RequestExclusionCheckerTest.php` | Wildcard paths, route patterns, methods, status exclusions, full request evaluation |
-| `tests/Unit/DefaultVisitorIdentifierTest.php` | Stable hash, no raw IP in identifier, IP hash toggle |
+| `tests/Unit/IpAddressNormalizerTest.php` | IPv4, IPv6, mapped IPv6, empty IP |
+| `tests/Unit/DefaultVisitorIdentifierTest.php` | Stable hash, IP/UA variants, salt, auth user, IPv4/IPv6 |
+| `tests/Database/VisitorAnalyticsTest.php` | Unique/repeat upsert, raw IP toggle, count queries |
+| `tests/Tracking/VisitorTrackingTest.php` | End-to-end repeat/unique visitors, raw IP privacy defaults |
 
-**Suite totals after Phase 3:** 50 tests, 119 assertions.
+**Suite totals after Phase 4:** 68 tests, 158 assertions.
 
 ---
 
 ### Commands run
 
 ```powershell
-composer update illuminate/http illuminate/routing --no-interaction
-composer dump-autoload
 composer lint
 composer verify
 ```
@@ -108,7 +112,7 @@ composer verify
 | PHPStan (level 7) | Passed |
 | Pint | Passed |
 | Pest type coverage | 100% |
-| Pest test suite | **50 passed** (10751 ms) |
+| Pest test suite | **68 passed** (7665 ms) |
 
 ---
 
@@ -116,58 +120,40 @@ composer verify
 
 | Item | Status |
 |------|--------|
-| Visitor identification is minimal | Phase 4 must expand strategy, tests, and docs |
-| Synchronous recording under load | Acceptable for v1; monitor in Phase 12 |
-| Middleware auto-push requires config at boot | Host apps caching config need standard Laravel config caching workflow |
-| No queue fallback yet | Optional future enhancement |
-| Error/ban middleware not registered | Expected — Phases 5–6 |
-| Testbench requires explicit middleware on routes | Production uses `web` group push; tests use explicit route middleware |
+| Visitor counts are approximate | Documented in `VISITOR_IDENTIFICATION.md` |
+| No bot/user-agent ignore list | Future enhancement |
+| Auth user only when logged in during request | Documented limitation |
+| Trusted proxy misconfiguration | Host app responsibility |
+| `VisitorAnalytics` period filters basic | Dashboard may need richer queries in Phase 8 |
 
-**No blockers prevent Phase 4.**
+**No blockers prevent Phase 5.**
 
 ---
 
-### Phase 4 readiness
+### Phase 5 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| Page views recording with `visitor_hash` | Ready |
-| Visitor model/table with IP/UA fields | Ready |
-| `VisitorIdentifier` contract + default impl | Ready to extend/replace |
-| Privacy config keys (`store_raw_ip`, `hash_ips`, etc.) | Ready — logic partially used; Phase 4 completes |
-| Traffic tracking tests green | Ready |
-| Repeat vs unique visitor queries | Needs Phase 4 services/tests |
+| Traffic + visitor pipeline stable | Ready |
+| Page views linked to visitors | Ready |
+| Privacy defaults enforced | Ready |
+| Extension contracts in place | Ready |
+| Error table/model exists | Ready (unused) |
+| Middleware pattern established | Ready for error middleware |
 
-**Phase 4 scope:** visitor identification strategy, privacy controls (raw IP omission, IPv4/IPv6), unique/repeat visitor behaviour, hashed identifier tests, documentation of limitations.
-
----
-
-## Phase 2 Report (archived summary)
-
-Configuration and persistence: four analytics tables, Eloquent models, factories, full `config/analytics.php`. See git history for details.
+**Phase 5 scope:** safe HTTP error recording, fingerprint aggregation, rethrow guarantee, sensitive data exclusion tests.
 
 ---
 
-## Phase 1 Report (archived summary)
+## Phase 3 Report (archived summary)
 
-Package foundation normalized: Composer metadata, `analytics-*` conventions, baseline provider tests.
+Traffic tracking via `TrackTrafficMiddleware` and `PageViewRecorder`. See git history for details.
 
 ---
 
 ## Current state (summary)
 
-Traffic tracking works when `analytics.enabled` and `analytics.tracking.traffic` are true. Page views record path, method, route name, status, duration, referrer (when enabled), and visitor hash. Dashboard routes excluded by default. No error tracking, IP banning, or Livewire dashboard.
-
----
-
-## Dependency decisions
-
-| Decision | Choice |
-|----------|--------|
-| Runtime | `illuminate/database`, `illuminate/http`, `illuminate/routing`, `illuminate/support` ^12\|\|^13 |
-| PHP | `^8.3` |
-| Testbench | ^10 / ^11 |
-| Pest | ^4.6\|\|^5.0 |
+Traffic and visitor analytics operational when enabled. Privacy-aware hashed identifiers, unique/repeat visitor metrics, optional raw IP storage. No error tracking, IP banning, or dashboard.
 
 ---
 
@@ -175,22 +161,13 @@ Traffic tracking works when `analytics.enabled` and `analytics.tracking.traffic`
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0** | Discovery | Complete |
-| **1** | Package foundation | Complete |
-| **2** | Config + database | Complete |
-| **3** | Traffic analytics | **Complete** |
-| **4** | Visitor analytics | Next |
-| **5** | Error analytics | Pending |
-| **6** | IP banning | Pending |
-| **7** | Retention | Pending |
-| **8** | Livewire dashboard | Pending |
-| **9** | OSS documentation | Pending |
-| **10** | CI automation | Pending |
-| **11** | Packagist readiness | Pending |
-| **12** | v1 hardening | Pending |
+| **0–3** | Discovery → traffic analytics | Complete |
+| **4** | Visitor analytics | **Complete** |
+| **5** | Error analytics | Next |
+| **6–12** | Bans, retention, dashboard, OSS, CI, release, hardening | Pending |
 
 ---
 
 ## Next step
 
-**Phase 4 — Visitor analytics** — await explicit go-ahead. Do not implement until requested.
+**Phase 5 — Error analytics** — await explicit go-ahead.

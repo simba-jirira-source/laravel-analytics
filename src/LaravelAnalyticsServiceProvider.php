@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelAnalytics\LaravelAnalytics;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPlaceholderCommand;
@@ -11,7 +12,11 @@ use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
+use LaravelAnalytics\LaravelAnalytics\Services\VisitorAnalytics;
+use LaravelAnalytics\LaravelAnalytics\Services\VisitorService;
+use LaravelAnalytics\LaravelAnalytics\Support\AnalyticsHashSalt;
 use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
+use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
 use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
 
 class LaravelAnalyticsServiceProvider extends ServiceProvider
@@ -26,9 +31,17 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $this->app->singleton(LaravelAnalytics::class);
 
         $this->app->singleton(RequestExclusionChecker::class);
+        $this->app->singleton(AnalyticsHashSalt::class);
+        $this->app->singleton(IpAddressNormalizer::class);
 
-        $this->app->singleton(VisitorIdentifier::class, DefaultVisitorIdentifier::class);
+        $this->app->singleton(VisitorIdentifier::class, function (Application $app): VisitorIdentifier {
+            $class = config('analytics.visitor_identifier', DefaultVisitorIdentifier::class);
 
+            return $app->make($class);
+        });
+
+        $this->app->singleton(VisitorService::class);
+        $this->app->singleton(VisitorAnalytics::class);
         $this->app->singleton(PageViewRecorder::class);
 
         $this->app->alias(PageViewRecorder::class, AnalyticsRecorder::class);

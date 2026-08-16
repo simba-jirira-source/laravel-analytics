@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
 
 return [
 
@@ -110,6 +111,18 @@ return [
         'collect_user_agent' => true,
 
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Visitor Identification
+    |--------------------------------------------------------------------------
+    |
+    | Replace the default visitor identifier by binding a custom class that
+    | implements LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier.
+    |
+    */
+
+    'visitor_identifier' => DefaultVisitorIdentifier::class,
 
     /*
     |--------------------------------------------------------------------------

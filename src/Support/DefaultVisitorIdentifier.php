@@ -9,17 +9,28 @@ use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
 
 class DefaultVisitorIdentifier implements VisitorIdentifier
 {
+    public function __construct(
+        protected AnalyticsHashSalt $hashSalt,
+        protected IpAddressNormalizer $ipNormalizer,
+    ) {}
+
     public function identify(Request $request): string
     {
-        $salt = (string) (config('analytics.privacy.hash_salt') ?? config('app.key'));
-
         $components = [
-            $salt,
-            $request->ip() ?? '',
+            $this->hashSalt->resolve(),
+            $this->ipNormalizer->normalize($request->ip()),
         ];
 
         if ((bool) config('analytics.privacy.collect_user_agent')) {
             $components[] = $request->userAgent() ?? '';
+        }
+
+        if ((bool) config('analytics.privacy.track_authenticated_users')) {
+            $userId = $request->user()?->getAuthIdentifier();
+
+            if ($userId !== null && $userId !== '') {
+                $components[] = 'user:'.(string) $userId;
+            }
         }
 
         return hash('sha256', implode('|', $components));
@@ -35,8 +46,8 @@ class DefaultVisitorIdentifier implements VisitorIdentifier
             return null;
         }
 
-        $salt = (string) (config('analytics.privacy.hash_salt') ?? config('app.key'));
+        $normalized = $this->ipNormalizer->normalize($ip);
 
-        return hash('sha256', $salt.'|ip|'.$ip);
+        return hash('sha256', $this->hashSalt->resolve().'|ip|'.$normalized);
     }
 }
