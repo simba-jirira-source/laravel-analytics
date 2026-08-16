@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\View\Factory;
-use Throwable;
 
 if (! function_exists('app')) {
     return;
@@ -30,6 +29,6 @@ try {
     }
 
     $finder->addNamespace('analytics', $viewPath);
-} catch (Throwable) {
+} catch (\Throwable) {
     //
 }
