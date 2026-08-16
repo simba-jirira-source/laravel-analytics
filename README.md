@@ -12,18 +12,97 @@ First-party, self-hosted application analytics for Laravel.
     <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/security.yml"><img alt="Security" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/security.yml?branch=main&label=Security&style=flat-square"></a>
 </p>
 
-Track page views, unique visitors, HTTP errors, and optional IP bans from your own database. An optional Livewire 4 dashboard provides KPIs, trends, and management screens when you explicitly enable it.
+Track page views, unique visitors, HTTP errors, and optional IP bans in your application's own database. Enable an optional Livewire 4 dashboard when you want KPIs, trends, and management screens inside your Laravel app — without routing analytics data through a third-party platform by default.
 
-## Status
+<!-- Screenshot: uncomment after capturing docs/images/dashboard-overview.png
+![Analytics dashboard overview](docs/images/dashboard-overview.png)
+-->
 
-Pre-1.0 development. Latest release: **v0.6.0** (2026-08-16) on [Packagist](https://packagist.org/packages/simba-jirira-source/laravel-analytics) and [GitHub Releases](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.6.0).
+See [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) for recommended dashboard screenshots.
 
-## Requirements
+## Why Laravel Analytics?
 
-- PHP 8.3+
-- Laravel 12 or 13
+Laravel Analytics provides first-party analytics designed specifically for Laravel applications. It is intended for teams who want analytics data stored alongside their application rather than depending entirely on an external analytics service.
 
-These match the `composer.json` constraints. CI tests PHP 8.3–8.5 against Laravel 12 and 13 on Ubuntu and Windows, with focused SQLite/MySQL/PostgreSQL integration coverage on Ubuntu.
+- Analytics data stays in the application's own database
+- Tracking is disabled by default
+- Raw IP storage is disabled by default
+- Privacy-aware visitor hashing
+- Laravel-native package architecture (service provider, middleware, contracts, Artisan commands)
+- HTTP error analytics alongside traffic metrics
+- Optional exact IPv4/IPv6 access controls
+- Optional Livewire 4 dashboard with authorization gates
+- Configurable retention and pruning
+- SQLite, MySQL, and PostgreSQL tested in CI
+- Laravel 12 and 13 tested in CI
+- PHP 8.3–8.5 tested in CI
+
+Pre-1.0 development. See [GitHub Releases](https://github.com/simba-jirira-source/laravel-analytics/releases) and [CHANGELOG.md](CHANGELOG.md) for released versions.
+
+## Key Features
+
+| Capability | Default | Notes |
+|------------|---------|-------|
+| Page views | Off | Middleware-based traffic tracking |
+| Unique visitors | Privacy-aware hashing | Hashed identifiers; raw IP off by default |
+| HTTP error analytics | Off | Fingerprinted error aggregation |
+| Exact IPv4/IPv6 bans | Off | Optional middleware enforcement |
+| Retention / pruning | 90 days | `analytics:prune` command |
+| Livewire dashboard | Off | Gate or invokable authorization required |
+| Cross-database support | SQLite, MySQL, PostgreSQL | Integration tests in CI |
+| Replaceable contracts | Configurable | Visitor, traffic, and error recorders |
+| Composer security auditing | In CI and `composer verify` | `security.yml` workflow |
+
+## How It Differs
+
+| Capability | Laravel Analytics | External analytics integration |
+|------------|-------------------|--------------------------------|
+| Data stored in application database | Yes | Usually no |
+| Self-hosted analytics data | Yes | Depends on provider |
+| Page views | Yes | Yes |
+| Unique visitors | Yes | Yes |
+| HTTP error analytics | Yes | Usually separate tooling |
+| Exact IP access controls | Yes | Usually separate |
+| External analytics account required | No | Usually yes |
+| Laravel-native Livewire dashboard | Yes (optional) | Depends on provider |
+| SQLite / MySQL / PostgreSQL CI | Yes | Not applicable |
+
+## Quick Start
+
+1. Install the package and publish config plus migrations (see [Installation](#installation)).
+2. Run migrations.
+3. Enable features explicitly in `config/analytics.php`:
+
+```php
+'enabled' => true,
+
+'tracking' => [
+    'traffic' => true,
+    'errors' => true,
+],
+
+'ip_banning' => [
+    'enabled' => false,
+],
+
+'dashboard' => [
+    'enabled' => true,
+    'authorization' => 'viewAnalyticsDashboard',
+    'middleware' => ['web', 'auth'],
+],
+```
+
+4. Define dashboard authorization in your application:
+
+```php
+use Illuminate\Support\Facades\Gate;
+
+Gate::define('viewAnalyticsDashboard', fn ($user) => /* your policy */);
+```
+
+5. Visit `/analytics` (or your configured `dashboard.path`) when the dashboard is enabled.
+
+When `enabled` is true and tracking toggles are on, middleware is registered on the `web` group automatically.
 
 ## Installation
 
@@ -31,7 +110,7 @@ These match the `composer.json` constraints. CI tests PHP 8.3–8.5 against Lara
 composer require simba-jirira-source/laravel-analytics
 ```
 
-The service provider is registered automatically via Laravel package discovery.
+The service provider registers automatically via Laravel package discovery.
 
 ### Publish configuration
 
@@ -50,14 +129,10 @@ php artisan migrate
 
 ### Publish everything (optional)
 
-The shared `analytics` tag publishes config, views, translations, assets, and migrations:
-
 ```bash
 php artisan vendor:publish --tag=analytics
 php artisan migrate
 ```
-
-Individual publish tags:
 
 | Tag | Contents |
 |-----|----------|
@@ -67,67 +142,9 @@ Individual publish tags:
 | `analytics-lang` | Translation files |
 | `analytics-assets` | Public assets |
 
-See [docs/INSTALLATION.md](docs/INSTALLATION.md) for a full setup walkthrough.
+See [docs/INSTALLATION.md](docs/INSTALLATION.md) for the full walkthrough.
 
-## Quick start
-
-After publishing config and running migrations, enable features explicitly in `config/analytics.php`:
-
-```php
-'enabled' => true,
-
-'tracking' => [
-    'traffic' => true,
-    'errors' => true,
-],
-
-'ip_banning' => [
-    'enabled' => false, // opt-in; disabled by default
-],
-
-'dashboard' => [
-    'enabled' => true,
-    'authorization' => 'viewAnalyticsDashboard',
-    'middleware' => ['web', 'auth'],
-],
-```
-
-When `enabled` is true and tracking toggles are on, the package registers middleware on the `web` group automatically. You do not need to add middleware aliases manually for the default setup.
-
-Define authorization for the dashboard in your application, for example:
-
-```php
-use Illuminate\Support\Facades\Gate;
-
-Gate::define('viewAnalyticsDashboard', fn ($user) => /* your policy */);
-```
-
-Visit `/analytics` (or your configured `dashboard.path`) when the dashboard is enabled and authorized.
-
-## Features
-
-| Feature | Default | Documentation |
-|---------|---------|---------------|
-| Traffic / page-view tracking | Off | [Configuration](docs/CONFIGURATION.md) |
-| Visitor identification | Privacy-aware hashing | [Visitor identification](docs/VISITOR_IDENTIFICATION.md) |
-| HTTP error analytics | Off | [Architecture](docs/ARCHITECTURE.md#error-recording) |
-| IP banning (exact IPv4/IPv6) | Off | [Configuration](docs/CONFIGURATION.md#ip-banning) |
-| Data retention / pruning | 90 days | [Retention](docs/RETENTION.md) |
-| Livewire dashboard | Off | [Dashboard](docs/DASHBOARD.md) |
-
-## Artisan commands
-
-| Command | Description |
-|---------|-------------|
-| `analytics:prune` | Remove records older than the configured retention window |
-| `analytics:ip-ban {ip}` | Ban an exact IPv4 or IPv6 address |
-| `analytics:ip-unban {ip}` | Remove an active ban |
-
-Pruning is not scheduled automatically. See [docs/RETENTION.md](docs/RETENTION.md).
-
-There is no `analytics:install` command; follow [docs/INSTALLATION.md](docs/INSTALLATION.md) instead.
-
-## Privacy defaults
+## Privacy by Default
 
 By default the package:
 
@@ -137,11 +154,34 @@ By default the package:
 - does not associate authenticated users unless configured;
 - excludes dashboard routes from self-tracking.
 
-See [docs/PRIVACY.md](docs/PRIVACY.md) for full details.
+See [docs/PRIVACY.md](docs/PRIVACY.md). This package provides technical privacy controls but does not itself make an application compliant with any specific privacy law or regulatory framework.
 
-> This package provides technical privacy controls but does not itself make an application compliant with any specific privacy law or regulatory framework.
+## Compatibility
 
-## Configuration overview
+| Requirement | Supported |
+|-------------|-----------|
+| PHP | 8.3+ (8.3–8.5 in CI) |
+| Laravel | 12, 13 |
+| Livewire | 4 (required dependency; dashboard is optional via config) |
+| Databases | SQLite, MySQL, PostgreSQL (integration CI) |
+
+## Dashboard
+
+The optional Livewire 4 dashboard provides overview metrics, traffic trends, top pages and referrers, error details, and IP ban management when explicitly enabled and authorized.
+
+See [docs/DASHBOARD.md](docs/DASHBOARD.md).
+
+## Artisan Commands
+
+| Command | Description |
+|---------|-------------|
+| `analytics:prune` | Remove records older than the configured retention window |
+| `analytics:ip-ban {ip}` | Ban an exact IPv4 or IPv6 address |
+| `analytics:ip-unban {ip}` | Remove an active ban |
+
+Pruning is not scheduled automatically. See [docs/RETENTION.md](docs/RETENTION.md).
+
+## Configuration
 
 All settings live in `config/analytics.php`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for every key.
 
@@ -151,7 +191,7 @@ Extension points (contracts):
 - `SimbaJirira\LaravelAnalytics\Contracts\AnalyticsRecorder`
 - `SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder`
 
-Public integration uses Laravel contracts, config keys, middleware aliases, and Artisan commands. There is no facade in `0.6.0`; a first-party event API is planned for `0.7.0`.
+Public integration uses Laravel contracts, config keys, middleware aliases, and Artisan commands. There is no facade; a first-party event API is planned for a future release.
 
 ## Testing
 
@@ -163,26 +203,38 @@ composer verify
 Individual gates:
 
 ```bash
-composer test          # prepare, PHPStan, Pint, type coverage, Pest
-composer test:types    # Pest type coverage (skipped automatically on Windows)
-composer analyse       # PHPStan (level 7)
-composer lint:check    # Pint
-composer test:unit     # Pest (sequential on Windows, parallel elsewhere)
-composer test:database # cross-database integration tests
-composer security:audit         # Composer security audit
+composer test              # prepare, PHPStan, Pint, type coverage, Pest
+composer test:types        # Pest type coverage (skipped automatically on Windows)
+composer analyse           # PHPStan (level 7)
+composer lint:check        # Pint
+composer test:unit         # Pest (sequential on Windows, parallel elsewhere)
+composer test:database     # cross-database integration tests
+composer security:audit    # Composer security audit
 ```
 
-## Static analysis
+PHPStan level 7 via Larastan. Run `composer run prepare` before `composer analyse` when analysing locally.
 
-PHPStan level 7 via Larastan. Run `composer run prepare` before `composer analyse` when analysing locally (the `composer test` script does this automatically).
+## Documentation
 
-## Code of conduct
-
-See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+| Topic | Document |
+|-------|----------|
+| Installation | [docs/INSTALLATION.md](docs/INSTALLATION.md) |
+| Configuration | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
+| Privacy | [docs/PRIVACY.md](docs/PRIVACY.md) |
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Visitor identification | [docs/VISITOR_IDENTIFICATION.md](docs/VISITOR_IDENTIFICATION.md) |
+| Dashboard | [docs/DASHBOARD.md](docs/DASHBOARD.md) |
+| Retention | [docs/RETENTION.md](docs/RETENTION.md) |
+| Releases | [docs/RELEASES.md](docs/RELEASES.md) |
+| GitHub repository setup | [docs/GITHUB_REPOSITORY_SETUP.md](docs/GITHUB_REPOSITORY_SETUP.md) |
+| Screenshot guidance | [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) |
+| Contributing | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) |
+| Security policy | [.github/SECURITY.md](.github/SECURITY.md) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) before opening a pull request.
+Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) before opening a pull request. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Security
 

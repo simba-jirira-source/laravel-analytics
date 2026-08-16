@@ -1,12 +1,38 @@
 # Releases
 
-Maintainer guide for tagging and publishing Laravel Analytics. **Do not publish to Packagist until repository settings, credentials, and package name availability are confirmed.**
+Maintainer guide for tagging and publishing Laravel Analytics.
+
+**Cursor and CI automation must not decide when to publish a release.** The maintainer reviews readiness, prepares the changelog, and creates the annotated version tag.
+
+## Release flow
+
+```text
+development
+    ↓
+quality gates (local + CI)
+    ↓
+merge to main
+    ↓
+quality gates on main
+    ↓
+prepare CHANGELOG (move [Unreleased] → version section + date)
+    ↓
+annotated version tag (maintainer action)
+    ↓
+push tag
+    ↓
+GitHub Actions release workflow
+    ↓
+GitHub Release (from CHANGELOG section)
+    ↓
+Packagist synchronization (webhook or manual)
+```
 
 ## Pre-release checklist
 
 Before tagging:
 
-1. Ensure `main` is green in GitHub Actions (tests workflow).
+1. Ensure `main` is green in GitHub Actions (tests, type coverage, static analysis, code style, database, security).
 2. Run locally when possible:
 
 ```bash
@@ -14,8 +40,8 @@ composer validate --strict
 composer verify
 ```
 
-3. Review [CHANGELOG.md](../CHANGELOG.md) — move **Unreleased** entries into a version section.
-4. Confirm [README.md](../README.md) installation command matches the final Composer package name (`simba-jirira-source/laravel-analytics`).
+3. Review [CHANGELOG.md](../CHANGELOG.md) — move **Unreleased** entries into a version section with the release date.
+4. Confirm [README.md](../README.md) installation command matches `simba-jirira-source/laravel-analytics`.
 5. Confirm no secrets, `.env` files, or credentials are committed.
 6. Review [docs/PRIVACY.md](PRIVACY.md) and [docs/CONFIGURATION.md](CONFIGURATION.md) for accuracy.
 
@@ -31,46 +57,40 @@ Follow [Semantic Versioning](https://semver.org/):
 
 Before `1.0.0`, minor versions may include breaking changes if documented in the changelog.
 
-Planning milestones (not yet released):
-
-| Version | Scope |
-|---------|-------|
-| 0.1.0 | Foundation + traffic |
-| 0.2.0 | Visitor analytics |
-| 0.3.0 | Error analytics |
-| 0.4.0 | IP banning |
-| 0.5.0 | Livewire dashboard |
-| 0.6.0 | Privacy / retention hardening |
-| 0.9.0 | Release candidate quality |
-| 1.0.0 | Stable documented API |
-
 ## Tagging workflow
 
 1. Merge all release changes to `main`.
-2. Choose the version (example: `v0.5.0`).
+2. Choose the version (example: `v0.6.1`).
 3. Update `CHANGELOG.md` with the release date and version heading.
 4. Commit the changelog update.
-5. Create an annotated tag according to project policy:
+5. Create an annotated tag:
 
 ```bash
-git tag -a v0.5.0 -m "Release v0.5.0"
-git push origin v0.5.0
+git tag -a v0.6.1 -m "Release v0.6.1"
+git push origin v0.6.1
 ```
 
-Pushing a `v*` tag triggers `.github/workflows/release.yml`, which:
+Pushing a `v*` tag triggers [.github/workflows/release.yml](../.github/workflows/release.yml), which:
 
-1. Runs `composer validate --strict`, PHPStan, Pint, type coverage, and Pest on Ubuntu (PHP 8.4, Laravel 13, prefer-stable)
-2. Creates a GitHub Release with generated release notes (only if all gates pass)
+1. Verifies the tagged commit is reachable from `origin/main`
+2. Runs `composer validate --strict`, `composer audit`, PHPStan, Pint, type coverage, and Pest
+3. Creates a GitHub Release using the matching `CHANGELOG.md` section (not auto-generated release notes)
 
 Pre-release tags containing `-alpha`, `-beta`, or `-rc` are marked as GitHub pre-releases automatically.
 
-6. The `Update Changelog` workflow (`.github/workflows/update-changelog.yml`) can commit release notes to `CHANGELOG.md` when a GitHub Release is published.
-7. If using Packagist, verify the new tag is indexed (Phase 11).
-8. Smoke-test in a fresh Laravel application:
+6. If using Packagist, verify the new tag is indexed.
+7. Smoke-test in a fresh Laravel application:
 
 ```bash
-composer require simba-jirira-source/laravel-analytics:^0.5
+composer require simba-jirira-source/laravel-analytics:^0.6
 ```
+
+## CI architecture notes
+
+- **Compatibility matrix** (`.github/workflows/tests.yml`): PHP 8.3–8.5 × Laravel 12/13 × prefer-lowest/stable × Ubuntu/Windows — runs Pest behaviour tests only; `fail-fast: false`.
+- **Type coverage**: dedicated stable job (PHP 8.4, Laravel 13, prefer-stable) — runs `composer test:types` once.
+- **Database integration** (`.github/workflows/database.yml`): SQLite, MySQL, PostgreSQL.
+- **Security** (`.github/workflows/security.yml`): `composer validate --strict` and `composer audit`.
 
 ## Packagist
 
@@ -81,28 +101,20 @@ Packagist publication requires:
 - Packagist account and maintainer approval
 - GitHub webhook or manual update configured on Packagist
 
-Do not embed Packagist API tokens in this repository. Use Packagist UI or documented CI secrets (Phase 11).
+Do not embed Packagist API tokens in this repository.
 
-## GitHub repository settings (recommended)
+## GitHub repository metadata
 
-These settings are configured in GitHub, not in code:
-
-- Public repository
-- Issues enabled
-- Private vulnerability reporting enabled
-- Branch protection / rulesets on `main`
-- Required status checks (tests workflow)
-- Pull requests required before merge
-- Dependabot alerts enabled
-- Secret scanning where available
+Recommended description, topics, and homepage: [GITHUB_REPOSITORY_SETUP.md](GITHUB_REPOSITORY_SETUP.md).
 
 ## Post-release
 
 - Monitor GitHub Actions on `main`
 - Triage issues and security advisories
-- Begin **Unreleased** section in `CHANGELOG.md` for the next cycle
+- Begin a new empty **Unreleased** section in `CHANGELOG.md` for the next cycle
 
 ## Related documentation
 
 - [CHANGELOG.md](../CHANGELOG.md)
+- [GITHUB_REPOSITORY_SETUP.md](GITHUB_REPOSITORY_SETUP.md)
 - [phases/PHASE_11_PACKAGIST_RELEASE.md](phases/PHASE_11_PACKAGIST_RELEASE.md)
