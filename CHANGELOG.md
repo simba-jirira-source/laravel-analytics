@@ -1,8 +1,13 @@
 # Release Notes
 
+## v0.5.0 - 2026-08-16
+
+<!-- Release notes generated using configuration in .github/release.yml at v0.5.0 -->
+**Full Changelog**: https://github.com/simba-jirira-source/laravel-analytics/commits/v0.5.0
+
 ## [Unreleased]
 
-## [0.5.0] - 2026-08-16
+## [0.5.0](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0) - 2026-08-16
 
 First public pre-release: traffic tracking, visitor analytics, error analytics, IP banning, Livewire dashboard, retention pruning, OSS documentation, CI/CD, and Phase 12 hardening.
 
@@ -59,5 +64,3 @@ First public pre-release: traffic tracking, visitor analytics, error analytics, 
 
 - `analytics:placeholder` scaffold command, placeholder view, and translation file.
 - Unwired config keys: `dashboard.cache_ttl`, `trusted_proxies`, and `user.model` / `user.foreign_key`.
-
-[0.5.0]: https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0
