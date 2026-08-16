@@ -2,51 +2,51 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics;
+namespace SimbaJirira\LaravelAnalytics;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpBanCommand;
-use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpUnbanCommand;
-use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPruneCommand;
-use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
-use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\AuthorizeAnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\EnforceIpBanMiddleware;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
-use LaravelAnalytics\LaravelAnalytics\Livewire\AnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Livewire\ErrorDetails;
-use LaravelAnalytics\LaravelAnalytics\Livewire\IpBanManager;
-use LaravelAnalytics\LaravelAnalytics\Livewire\RecentErrors;
-use LaravelAnalytics\LaravelAnalytics\Livewire\StatusBreakdown;
-use LaravelAnalytics\LaravelAnalytics\Livewire\TopPages;
-use LaravelAnalytics\LaravelAnalytics\Livewire\TopReferrers;
-use LaravelAnalytics\LaravelAnalytics\Livewire\TrafficChart;
-use LaravelAnalytics\LaravelAnalytics\Livewire\TrafficOverview;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsPruner;
-use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
-use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
-use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
-use LaravelAnalytics\LaravelAnalytics\Services\VisitorAnalytics;
-use LaravelAnalytics\LaravelAnalytics\Services\VisitorService;
-use LaravelAnalytics\LaravelAnalytics\Support\AnalyticsHashSalt;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardAuthorizer;
-use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
-use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
-use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
-use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
 use Livewire\Component;
 use Livewire\Livewire;
+use SimbaJirira\LaravelAnalytics\Console\Commands\AnalyticsIpBanCommand;
+use SimbaJirira\LaravelAnalytics\Console\Commands\AnalyticsIpUnbanCommand;
+use SimbaJirira\LaravelAnalytics\Console\Commands\AnalyticsPruneCommand;
+use SimbaJirira\LaravelAnalytics\Contracts\AnalyticsRecorder;
+use SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Contracts\VisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\AuthorizeAnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\EnforceIpBanMiddleware;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
+use SimbaJirira\LaravelAnalytics\Livewire\AnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Livewire\ErrorDetails;
+use SimbaJirira\LaravelAnalytics\Livewire\IpBanManager;
+use SimbaJirira\LaravelAnalytics\Livewire\RecentErrors;
+use SimbaJirira\LaravelAnalytics\Livewire\StatusBreakdown;
+use SimbaJirira\LaravelAnalytics\Livewire\TopPages;
+use SimbaJirira\LaravelAnalytics\Livewire\TopReferrers;
+use SimbaJirira\LaravelAnalytics\Livewire\TrafficChart;
+use SimbaJirira\LaravelAnalytics\Livewire\TrafficOverview;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsDashboardQuery;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsPruner;
+use SimbaJirira\LaravelAnalytics\Services\IpBanService;
+use SimbaJirira\LaravelAnalytics\Services\IpUnbanService;
+use SimbaJirira\LaravelAnalytics\Services\PageViewRecorder;
+use SimbaJirira\LaravelAnalytics\Services\VisitorAnalytics;
+use SimbaJirira\LaravelAnalytics\Services\VisitorService;
+use SimbaJirira\LaravelAnalytics\Support\AnalyticsHashSalt;
+use SimbaJirira\LaravelAnalytics\Support\DashboardAuthorizer;
+use SimbaJirira\LaravelAnalytics\Support\DefaultVisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Support\ErrorFingerprintGenerator;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressNormalizer;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressValidator;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use SimbaJirira\LaravelAnalytics\Support\SensitiveMessageRedactor;
 
-class LaravelAnalyticsServiceProvider extends ServiceProvider
+class AnalyticsServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
@@ -54,8 +54,6 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/analytics.php', 'analytics');
-
-        $this->app->singleton(LaravelAnalytics::class);
 
         $this->app->singleton(RequestExclusionChecker::class);
         $this->app->singleton(AnalyticsHashSalt::class);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
+use SimbaJirira\LaravelAnalytics\Support\SensitiveMessageRedactor;
 
 it('redacts sensitive key value pairs from messages', function () {
     $redactor = new SensitiveMessageRedactor;

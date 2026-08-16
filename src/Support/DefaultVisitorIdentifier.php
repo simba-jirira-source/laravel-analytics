@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Support;
+namespace SimbaJirira\LaravelAnalytics\Support;
 
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Contracts\VisitorIdentifier;
 
 class DefaultVisitorIdentifier implements VisitorIdentifier
 {

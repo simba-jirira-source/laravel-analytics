@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsPruner;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsPruner;
 
 beforeEach(function () {
     config([

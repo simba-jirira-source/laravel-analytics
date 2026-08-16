@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use LaravelAnalytics\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardAuthorizer;
-use LaravelAnalytics\LaravelAnalytics\Tests\Support\DashboardUser;
+use SimbaJirira\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess;
+use SimbaJirira\LaravelAnalytics\Support\DashboardAuthorizer;
+use SimbaJirira\LaravelAnalytics\Tests\Support\DashboardUser;
 
 it('denies dashboard access by default when authorization is not configured', function () {
     config([

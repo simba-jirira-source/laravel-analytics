@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Support;
+namespace SimbaJirira\LaravelAnalytics\Support;
 
 class AnalyticsHashSalt
 {

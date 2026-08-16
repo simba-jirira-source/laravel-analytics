@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressValidator;
 
 beforeEach(function () {
     $this->validator = app(IpAddressValidator::class);

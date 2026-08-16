@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Console\Commands;
+namespace SimbaJirira\LaravelAnalytics\Console\Commands;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
-use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
+use SimbaJirira\LaravelAnalytics\Services\IpUnbanService;
 
 class AnalyticsIpUnbanCommand extends Command
 {

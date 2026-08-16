@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Services;
+namespace SimbaJirira\LaravelAnalytics\Services;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
-use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Support\ErrorFingerprintGenerator;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
 use Throwable;
 
 class AnalyticsErrorRecorder implements ErrorRecorder

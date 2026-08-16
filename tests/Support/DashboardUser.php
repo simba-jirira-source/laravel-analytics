@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Tests\Support;
+namespace SimbaJirira\LaravelAnalytics\Tests\Support;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 

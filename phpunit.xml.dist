@@ -25,6 +25,9 @@
         <testsuite name="Database">
             <directory>tests/Database</directory>
         </testsuite>
+        <testsuite name="DatabaseIntegration">
+            <directory>tests/DatabaseIntegration</directory>
+        </testsuite>
         <testsuite name="Tracking">
             <directory>tests/Tracking</directory>
         </testsuite>

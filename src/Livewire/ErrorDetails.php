@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Livewire;
+namespace SimbaJirira\LaravelAnalytics\Livewire;
 
 use Illuminate\View\View;
-use LaravelAnalytics\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
 use Livewire\Component;
+use SimbaJirira\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
 
 class ErrorDetails extends Component
 {

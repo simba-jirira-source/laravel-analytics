@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
 
 it('records a page view for enabled traffic tracking', function () {
     $this->get('/test-page')

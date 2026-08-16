@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressNormalizer;
 
 beforeEach(function () {
     $this->normalizer = new IpAddressNormalizer;

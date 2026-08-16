@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Tests;
+namespace SimbaJirira\LaravelAnalytics\Tests;
 
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
 use RuntimeException;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 abstract class ErrorTrackingTestCase extends DatabaseTestCase

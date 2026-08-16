@@ -17,6 +17,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag commit is on main
+        run: |
+          git fetch origin main --tags
+          TAG_COMMIT="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
+          if ! git merge-base --is-ancestor "${TAG_COMMIT}" origin/main; then
+            echo "Release tags must point to a commit reachable from origin/main."
+            exit 1
+          fi
 
       - name: Setup PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
@@ -38,6 +49,9 @@ jobs:
 
       - name: Validate Composer metadata
         run: composer validate --strict
+
+      - name: Run Composer audit
+        run: composer audit --format=plain --abandoned=ignore
 
       - name: Run PHPStan
         run: composer analyse
@@ -66,8 +80,33 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Extract CHANGELOG section
+        id: changelog
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          BODY_FILE="$(mktemp)"
+          awk -v version="${VERSION}" '
+            BEGIN { capture=0 }
+            /^## \[/ {
+              if (capture) { exit }
+              if ($0 ~ "\\[" version "\\]") { capture=1; next }
+            }
+            capture { print }
+          ' CHANGELOG.md > "${BODY_FILE}"
+
+          if [ ! -s "${BODY_FILE}" ]; then
+            echo "No CHANGELOG section found for version ${VERSION}."
+            exit 1
+          fi
+
+          echo "body<<EOF" >> "${GITHUB_OUTPUT}"
+          cat "${BODY_FILE}" >> "${GITHUB_OUTPUT}"
+          echo "EOF" >> "${GITHUB_OUTPUT}"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2.4.2
         with:
-          generate_release_notes: true
+          body: ${{ steps.changelog.outputs.body }}
+          generate_release_notes: false
           prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Livewire\Concerns;
+namespace SimbaJirira\LaravelAnalytics\Livewire\Concerns;
 
 use InvalidArgumentException;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardAuthorizer;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
+use SimbaJirira\LaravelAnalytics\Support\DashboardAuthorizer;
+use SimbaJirira\LaravelAnalytics\Support\DashboardDateRange;
 
 /**
  * @property string $from

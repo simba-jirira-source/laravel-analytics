@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Http\Middleware;
+namespace SimbaJirira\LaravelAnalytics\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Contracts\AnalyticsRecorder;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 

@@ -24,13 +24,14 @@ Environment variables are not required; application config is the primary interf
 | `dashboard.middleware` | `['web', 'auth']` | Middleware stack before package authorization |
 | `dashboard.authorization` | `null` | Gate name or invokable class; routes stay disabled when null |
 | `dashboard.pagination.per_page` | `25` | Pagination size for list widgets |
+| `dashboard.cache_ttl` | `0` | Cache dashboard overview metrics for this many seconds (`0` disables caching) |
 
 Routes register only when `dashboard.enabled` is true **and** `dashboard.authorization` is set.
 
 Authorization options:
 
 - **Gate name** — resolved via `Gate::forUser($user)->allows($name)`
-- **Invokable class** — e.g. `LaravelAnalytics\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess`
+- **Invokable class** — e.g. `SimbaJirira\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess`
 
 See [DASHBOARD.md](DASHBOARD.md).
 
@@ -124,6 +125,7 @@ Adjust when your dashboard path differs from `analytics`.
 | `retention.prune_visitors` | `true` | Prune stale visitors |
 | `retention.prune_errors` | `true` | Prune old error aggregates |
 | `retention.prune_ip_bans` | `true` | Deactivate expired bans and remove old records |
+| `retention.chunk_size` | `1000` | Maximum rows deleted per batch during pruning |
 
 See [RETENTION.md](RETENTION.md).
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Tests;
+namespace SimbaJirira\LaravelAnalytics\Tests;
 
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
 
 abstract class TrackingTestCase extends DatabaseTestCase
 {

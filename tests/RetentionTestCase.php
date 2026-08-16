@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Tests;
+namespace SimbaJirira\LaravelAnalytics\Tests;
 
 abstract class RetentionTestCase extends DatabaseTestCase
 {

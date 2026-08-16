@@ -35,7 +35,7 @@ Publish and customize configuration, then point `analytics.visitor_identifier` a
 'visitor_identifier' => App\Analytics\CustomVisitorIdentifier::class,
 ```
 
-Your class must implement `LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier`.
+Your class must implement `SimbaJirira\LaravelAnalytics\Contracts\VisitorIdentifier`.
 
 ## Known limitations
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Services;
+namespace SimbaJirira\LaravelAnalytics\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Contracts\VisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
 
 class VisitorService
 {

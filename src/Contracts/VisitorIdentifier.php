@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Contracts;
+namespace SimbaJirira\LaravelAnalytics\Contracts;
 
 use Illuminate\Http\Request;
 

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Tests;
+namespace SimbaJirira\LaravelAnalytics\Tests;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
-use LaravelAnalytics\LaravelAnalytics\LaravelAnalyticsServiceProvider;
-use LaravelAnalytics\LaravelAnalytics\Tests\Support\DashboardUser;
 use Livewire\LivewireServiceProvider;
+use SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider;
+use SimbaJirira\LaravelAnalytics\Tests\Support\DashboardUser;
 
 abstract class DashboardTestCase extends DatabaseTestCase
 {
@@ -19,7 +19,7 @@ abstract class DashboardTestCase extends DatabaseTestCase
     {
         return [
             LivewireServiceProvider::class,
-            LaravelAnalyticsServiceProvider::class,
+            AnalyticsServiceProvider::class,
         ];
     }
 

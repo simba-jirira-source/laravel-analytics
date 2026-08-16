@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
-use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
+use SimbaJirira\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use SimbaJirira\LaravelAnalytics\Support\SensitiveMessageRedactor;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {

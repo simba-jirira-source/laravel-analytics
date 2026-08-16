@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use LaravelAnalytics\LaravelAnalytics\Livewire\AnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Livewire\ErrorDetails;
+use SimbaJirira\LaravelAnalytics\Livewire\AnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Livewire\ErrorDetails;
 
 if (! config('analytics.dashboard.enabled') || blank(config('analytics.dashboard.authorization'))) {
     return;

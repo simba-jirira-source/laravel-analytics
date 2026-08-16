@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Http\Middleware;
+namespace SimbaJirira\LaravelAnalytics\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardAuthorizer;
+use SimbaJirira\LaravelAnalytics\Support\DashboardAuthorizer;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthorizeAnalyticsDashboard

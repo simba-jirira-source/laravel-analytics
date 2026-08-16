@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
-use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
-use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
+use SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Support\ErrorFingerprintGenerator;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use SimbaJirira\LaravelAnalytics\Support\SensitiveMessageRedactor;
 
 beforeEach(function () {
     config([
