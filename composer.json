@@ -5,13 +5,18 @@
     "type": "library",
     "keywords": [
         "analytics",
+        "application-analytics",
+        "first-party",
         "laravel",
-        "laravel-analytics",
+        "laravel-package",
+        "privacy",
+        "self-hosted",
         "simba-jirira-source",
-        "statistics",
-        "tracking"
+        "tracking",
+        "visitor-analytics",
+        "web-analytics"
     ],
-    "homepage": "https://github.com/simba-jirira-source/laravel-analytics",
+    "homepage": "https://packagist.org/packages/simba-jirira-source/laravel-analytics",
     "license": "MIT",
     "authors": [
         {

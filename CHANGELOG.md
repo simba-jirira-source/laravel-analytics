@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-08-16
+
+Maintenance release: CI stabilization and open-source presentation improvements.
+
 ### Fixed
 
-- CI tests workflow: run Pest type coverage in a dedicated stable job instead of every PHP/Laravel matrix combination; set compatibility matrix `fail-fast` to `false`.
+- Stabilized Pest type-coverage CI by moving it to a dedicated stable PHP 8.4 / Laravel 13 / prefer-stable job instead of every compatibility matrix combination.
+- Prevented one compatibility matrix failure from cancelling unrelated PHP/Laravel combinations (`fail-fast: false`).
+
+### Changed
+
+- Raised the Pest type-coverage 4.x development dependency floor to `^4.0.4`.
+- Restructured README for clearer product positioning, feature scanning, documentation navigation, and compatibility summary.
+- Added repository discoverability and screenshot guidance (`docs/GITHUB_REPOSITORY_SETUP.md`, `docs/SCREENSHOTS.md`).
+- Updated release documentation to reflect the current tag-driven workflow and maintainer-led release process.
+- Refined Composer package keywords and homepage metadata for Packagist discoverability.
 
 ## [0.6.0] - 2026-08-16
 
@@ -107,5 +120,6 @@ First public pre-release: traffic tracking, visitor analytics, error analytics, 
 - `analytics:placeholder` scaffold command, placeholder view, and translation file.
 - Unwired config keys: `dashboard.cache_ttl`, `trusted_proxies`, and `user.model` / `user.foreign_key`.
 
+[0.6.1]: https://github.com/simba-jirira-source/laravel-analytics/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/simba-jirira-source/laravel-analytics/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0
