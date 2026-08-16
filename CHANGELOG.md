@@ -1,37 +1,51 @@
-# Release Notes
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.6.0](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.6.0) - TBD
+## [0.6.0] - 2026-08-16
 
 Foundation cleanup before 1.0: namespace migration, database portability CI, performance hardening, release workflow repair, and dependency security auditing.
 
 ### Added
 
-- Cross-database integration tests for SQLite, MySQL, and PostgreSQL (`tests/DatabaseIntegration/*`, `database.yml` workflow).
-- `DatabaseSqlHelper` for driver-aware dashboard date SQL.
+- Cross-database integration tests for SQLite, MySQL, and PostgreSQL (`tests/DatabaseIntegration/*`).
+- `DatabaseIntegration` PHPUnit testsuite in `phpunit.xml.dist`.
+- `DatabaseSqlHelper` for driver-aware dashboard date SQL across SQLite, MySQL, and PostgreSQL.
 - Configurable dashboard aggregate caching via `dashboard.cache_ttl` (default `0`, disabled).
 - Configurable retention delete batching via `retention.chunk_size` (default `1000`).
 - Composite index on `analytics_page_views (viewed_at, visitor_hash)` for dashboard queries.
-- Dedicated `security.yml` workflow and `composer audit` in `composer verify`.
+- `database.yml` GitHub Actions workflow for SQLite, MySQL 8.4, and PostgreSQL 16.
+- `security.yml` GitHub Actions workflow for scheduled and on-push Composer security auditing.
+- `composer security:audit` script and inclusion in `composer verify`.
+- `composer test:database` script for cross-database integration tests.
+- Regression tests for chunked pruning and dashboard query caching.
+- Windows-compatible Composer wrappers: `tools/type-coverage.php` and `tools/run-pest.php`.
 - `docs/V0_6_0_READINESS_REPORT.md`.
 
 ### Changed
 
 - **Breaking:** PHP namespace migrated from `LaravelAnalytics\LaravelAnalytics\` to `SimbaJirira\LaravelAnalytics\`.
 - **Breaking:** Service provider renamed to `SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider`.
-- **Breaking:** Removed empty `LaravelAnalytics` facade and root service class; use contracts, config, and container bindings instead.
+- **Breaking:** Removed empty `LaravelAnalytics` facade and root service class; use contracts, config keys, middleware aliases, and container bindings instead.
 - `AnalyticsPruner` deletes stale rows in bounded batches instead of single large deletes.
 - `AnalyticsDashboardQuery` uses driver-aware SQL for traffic trends and distinct visitor-day counts.
-- Release workflow runs quality gates (including `composer audit`) before publishing and uses CHANGELOG sections for GitHub Release bodies.
-- README updated with Packagist badge, current release status, PHP/Laravel support, and CI badges.
+- Release workflow runs quality gates (including `composer audit`) before publishing, verifies tags are reachable from `main`, and uses matching `CHANGELOG.md` sections for GitHub Release bodies.
+- README updated with Packagist badge, current release status, PHP/Laravel support, CI badges, and Windows testing notes.
+- `docs/CONFIGURATION.md` documents `dashboard.cache_ttl` and `retention.chunk_size`.
+- `composer test:types` skips type coverage on Windows where the Pest plugin is unsupported; CI remains authoritative on Ubuntu.
+- `composer test:unit` runs Pest sequentially on Windows to avoid Testbench bootstrap cache locking under parallel workers.
 
 ### Removed
 
 - `LaravelAnalytics` facade alias and empty facade/service class.
-- `update-changelog.yml` workflow that duplicated CHANGELOG sections after each release.
+- `update-changelog.yml` workflow that duplicated `CHANGELOG.md` sections after each GitHub Release.
 
-## [0.5.0](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0) - 2026-08-16
+## [0.5.0] - 2026-08-16
 
 First public pre-release: traffic tracking, visitor analytics, error analytics, IP banning, Livewire dashboard, retention pruning, OSS documentation, CI/CD, and Phase 12 hardening.
 
@@ -88,3 +102,6 @@ First public pre-release: traffic tracking, visitor analytics, error analytics, 
 
 - `analytics:placeholder` scaffold command, placeholder view, and translation file.
 - Unwired config keys: `dashboard.cache_ttl`, `trusted_proxies`, and `user.model` / `user.foreign_key`.
+
+[0.6.0]: https://github.com/simba-jirira-source/laravel-analytics/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0

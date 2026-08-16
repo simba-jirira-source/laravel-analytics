@@ -16,7 +16,7 @@ Track page views, unique visitors, HTTP errors, and optional IP bans from your o
 
 ## Status
 
-Pre-1.0 development. Latest release: **v0.5.0** on [Packagist](https://packagist.org/packages/simba-jirira-source/laravel-analytics) and [GitHub Releases](https://github.com/simba-jirira-source/laravel-analytics/releases). The `0.6.0` foundation release (namespace cleanup, database CI, performance hardening) is prepared on `main` and awaits maintainer tagging.
+Pre-1.0 development. Latest release: **v0.6.0** (2026-08-16) on [Packagist](https://packagist.org/packages/simba-jirira-source/laravel-analytics) and [GitHub Releases](https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.6.0).
 
 ## Requirements
 
