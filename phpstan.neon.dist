@@ -6,3 +6,5 @@ parameters:
         - database
         - routes
     tmpDir: build/phpstan
+    bootstrapFiles:
+        - phpstan/bootstrap.php

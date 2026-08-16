@@ -1,6 +1,7 @@
 laravel: '@testbench'
 
 providers:
+  - LaravelAnalytics\LaravelAnalytics\LaravelAnalyticsServiceProvider
   # - Workbench\App\Providers\WorkbenchServiceProvider
 
 migrations:
