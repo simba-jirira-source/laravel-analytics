@@ -6,6 +6,7 @@ namespace LaravelAnalytics\LaravelAnalytics\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Throwable;
 
 class RequestExclusionChecker
 {
@@ -13,6 +14,47 @@ class RequestExclusionChecker
     {
         return (bool) config('analytics.enabled')
             && (bool) config('analytics.tracking.traffic');
+    }
+
+    public function isErrorTrackingEnabled(): bool
+    {
+        return (bool) config('analytics.enabled')
+            && (bool) config('analytics.tracking.errors');
+    }
+
+    public function shouldRecordError(Request $request, Throwable $throwable): bool
+    {
+        if (! $this->isErrorTrackingEnabled()) {
+            return false;
+        }
+
+        if ($this->isIgnoredMethod($request->method())) {
+            return false;
+        }
+
+        if ($this->isIgnoredPath($request->path())) {
+            return false;
+        }
+
+        $routeName = $request->route()?->getName();
+
+        if ($routeName !== null && $this->isIgnoredRouteName($routeName)) {
+            return false;
+        }
+
+        if ($this->isPackageRecorderFailure($throwable)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function isPackageRecorderFailure(Throwable $throwable): bool
+    {
+        $file = str_replace('\\', '/', $throwable->getFile());
+
+        return str_contains($file, '/Services/AnalyticsErrorRecorder.php')
+            || str_contains($file, '/Http/Middleware/RecordErrorsMiddleware.php');
     }
 
     public function shouldTrackRequest(Request $request): bool

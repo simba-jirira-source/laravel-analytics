@@ -28,6 +28,9 @@
         <testsuite name="Tracking">
             <directory>tests/Tracking</directory>
         </testsuite>
+        <testsuite name="ErrorTracking">
+            <directory>tests/ErrorTracking</directory>
+        </testsuite>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>

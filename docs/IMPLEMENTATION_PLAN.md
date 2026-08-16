@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 4 complete (visitor analytics). No error tracking, IP banning, or dashboard.
+> **Status:** Phase 5 complete (error analytics). No IP banning or dashboard.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,55 +8,44 @@
 
 ---
 
-## Phase 4 Report
+## Phase 5 Report
 
 ### What was implemented
 
-Phase 4 expanded visitor analytics and privacy-aware identification while preserving the Phase 3 traffic pipeline:
+Phase 5 added safe HTTP error analytics with strict failure isolation and Laravel exception preservation:
 
-- **`VisitorService`** — upserts visitors, preserves `first_seen_at`, updates `last_seen_at`, applies privacy rules for IP/UA/user association.
-- **`VisitorAnalytics`** — unique/repeat visitor counting and repeat detection via page view activity.
-- **`DefaultVisitorIdentifier` (enhanced)** — salt + normalized IP + optional UA + optional authenticated user ID; never IP alone.
-- **`IpAddressNormalizer`** — IPv4, IPv6, and IPv4-mapped IPv6 normalization.
-- **`AnalyticsHashSalt`** — resolves `analytics.privacy.hash_salt` or `app.key`.
-- **`analytics.visitor_identifier` config** — replaceable identifier binding.
-- **`docs/VISITOR_IDENTIFICATION.md`** — strategy, replacement instructions, known limitations.
+- **`RecordErrorsMiddleware`** — wraps the request pipeline, records on `catch (Throwable)`, always rethrows the original exception.
+- **`AnalyticsErrorRecorder`** — persists and aggregates `AnalyticsError` rows by SHA-256 fingerprint; increments `occurrence_count` and updates `last_occurred_at`.
+- **`ErrorFingerprintGenerator`** — stable fingerprint from exception class, file, line, and redacted message.
+- **`SafeExceptionMetadataExtractor`** — safe metadata only (class, sanitized message, route, path, method, status, file, line); no request bodies, cookies, tokens, or headers.
+- **`ErrorRecorder` contract** + **`analytics.error_recorder` config** — replaceable recorder binding.
+- **`RequestExclusionChecker` (extended)** — `isErrorTrackingEnabled()`, `shouldRecordError()`, ignored dashboard paths/routes, and precise package-recorder failure detection (avoids false positives from test class filenames).
 
-**Not implemented (by design):** error tracking, IP ban middleware, dashboard, bot filtering, cookies, queue-backed recording.
+**Not implemented (by design):** IP ban middleware, dashboard, queue-backed error recording, Phase 6+ features.
 
 ---
 
-### Visitor identification strategy
+### Safety guarantees
 
-The default identifier produces a one-way SHA-256 hash from:
-
-1. Application salt (`analytics.privacy.hash_salt` → `app.key` fallback)
-2. Normalized client IP (IPv4 / IPv6 / mapped IPv6)
-3. User agent (when `analytics.privacy.collect_user_agent` is true)
-4. Authenticated user ID (when `analytics.privacy.track_authenticated_users` is true)
-
-No cookies. Raw inputs are not stored in the hash. Replace via `analytics.visitor_identifier` implementing `VisitorIdentifier`.
-
-**Unique vs repeat:**
-
-- **Unique** — distinct `analytics_visitors` rows
-- **Repeat** — visitors with ≥ 2 page views
-
-See [`docs/VISITOR_IDENTIFICATION.md`](VISITOR_IDENTIFICATION.md).
+| Guarantee | Mechanism |
+|-----------|-----------|
+| Laravel exception behaviour preserved | Middleware always `throw $throwable` after recording |
+| No sensitive request data stored | Metadata extractor never reads body/query/cookies/headers; message redaction for secrets |
+| Failure isolation | `recordSafely()` swallows recorder failures; package recorder failures excluded from persistence |
+| Dashboard self-exclusion | Same `analytics.ignored` paths/routes as traffic tracking |
+| Disabled by default | Requires `analytics.enabled` **and** `analytics.tracking.errors` |
 
 ---
 
 ### Privacy decisions
 
-| Setting | Default | Behaviour |
-|---------|---------|-----------|
-| `store_raw_ip` | `false` | `ip_address` null unless explicitly enabled |
-| `hash_ips` | `true` | Separate `ip_hash` on visitor when enabled |
-| `hash_salt` | `null` | Falls back to `app.key` |
-| `collect_user_agent` | `true` | UA in hash + optional visitor storage |
-| `track_authenticated_users` | `false` | User ID omitted from hash and records unless enabled |
-
-Page views inherit `user_id` from the resolved visitor record. No request bodies, cookies, tokens, or auth headers are persisted.
+| Data | Stored? | Notes |
+|------|---------|-------|
+| Request body / query | No | Never read by error recorder |
+| Cookies / Authorization headers | No | Never read |
+| Exception message | Yes (sanitized) | Password/token/secret patterns redacted; truncated to 1000 chars |
+| Path / method / route name | Yes | Same safe fields as traffic analytics |
+| Exception file / line | Yes | From throwable only, not request context |
 
 ---
 
@@ -64,34 +53,36 @@ Page views inherit `user_id` from the resolved visitor record. No request bodies
 
 | Action | Path |
 |--------|------|
-| Created | `src/Services/VisitorService.php` |
-| Created | `src/Services/VisitorAnalytics.php` |
-| Created | `src/Support/AnalyticsHashSalt.php` |
-| Created | `src/Support/IpAddressNormalizer.php` |
-| Created | `docs/VISITOR_IDENTIFICATION.md` |
-| Created | `tests/Unit/IpAddressNormalizerTest.php` |
-| Created | `tests/Database/VisitorAnalyticsTest.php` |
-| Created | `tests/Tracking/VisitorTrackingTest.php` |
-| Modified | `src/Support/DefaultVisitorIdentifier.php` |
-| Modified | `src/Services/PageViewRecorder.php` |
+| Created | `src/Contracts/ErrorRecorder.php` |
+| Created | `src/Http/Middleware/RecordErrorsMiddleware.php` |
+| Created | `src/Services/AnalyticsErrorRecorder.php` |
+| Created | `src/Support/ErrorFingerprintGenerator.php` |
+| Created | `src/Support/SafeExceptionMetadataExtractor.php` |
+| Created | `tests/ErrorTrackingTestCase.php` |
+| Created | `tests/ErrorTracking/ErrorTrackingTest.php` |
+| Created | `tests/Unit/ErrorFingerprintGeneratorTest.php` |
+| Created | `tests/Unit/SafeExceptionMetadataExtractorTest.php` |
+| Created | `tests/Database/AnalyticsErrorRecorderTest.php` |
+| Modified | `src/Support/RequestExclusionChecker.php` |
 | Modified | `src/LaravelAnalyticsServiceProvider.php` |
 | Modified | `config/analytics.php` |
-| Modified | `tests/Unit/DefaultVisitorIdentifierTest.php` |
+| Modified | `tests/Pest.php` |
+| Modified | `phpunit.xml.dist` |
 | Modified | `CHANGELOG.md` |
 | Modified | `docs/IMPLEMENTATION_PLAN.md` |
 
 ---
 
-### Tests added
+### Tests added (safety regressions)
 
 | File | Coverage |
 |------|----------|
-| `tests/Unit/IpAddressNormalizerTest.php` | IPv4, IPv6, mapped IPv6, empty IP |
-| `tests/Unit/DefaultVisitorIdentifierTest.php` | Stable hash, IP/UA variants, salt, auth user, IPv4/IPv6 |
-| `tests/Database/VisitorAnalyticsTest.php` | Unique/repeat upsert, raw IP toggle, count queries |
-| `tests/Tracking/VisitorTrackingTest.php` | End-to-end repeat/unique visitors, raw IP privacy defaults |
+| `tests/Unit/ErrorFingerprintGeneratorTest.php` | Stable fingerprints, class differentiation, sensitive message redaction |
+| `tests/Unit/SafeExceptionMetadataExtractorTest.php` | Safe metadata, HTTP status resolution, message redaction |
+| `tests/Database/AnalyticsErrorRecorderTest.php` | Record, aggregate, disabled tracking, package failure exclusion, middleware isolation |
+| `tests/ErrorTracking/ErrorTrackingTest.php` | Rethrow guarantee, disabled tracking, fingerprint grouping, HTTP status, no payload leakage, dashboard exclusion, recorder failure isolation |
 
-**Suite totals after Phase 4:** 68 tests, 158 assertions.
+**Suite totals after Phase 5:** 86 tests, 203 assertions.
 
 ---
 
@@ -112,7 +103,7 @@ composer verify
 | PHPStan (level 7) | Passed |
 | Pint | Passed |
 | Pest type coverage | 100% |
-| Pest test suite | **68 passed** (7665 ms) |
+| Pest test suite | **86 passed** (4936 ms) |
 
 ---
 
@@ -120,40 +111,37 @@ composer verify
 
 | Item | Status |
 |------|--------|
-| Visitor counts are approximate | Documented in `VISITOR_IDENTIFICATION.md` |
-| No bot/user-agent ignore list | Future enhancement |
-| Auth user only when logged in during request | Documented limitation |
-| Trusted proxy misconfiguration | Host app responsibility |
-| `VisitorAnalytics` period filters basic | Dashboard may need richer queries in Phase 8 |
+| Fingerprint includes file/line (refactors change grouping) | Expected trade-off; documented behaviour |
+| Message redaction is pattern-based, not exhaustive | Host apps with custom recorders can tighten |
+| Error middleware prepended to `web` when enabled | Host apps must enable explicitly |
+| No sampling or rate limiting on error volume | Future enhancement |
 
-**No blockers prevent Phase 5.**
+**No blockers prevent Phase 6.**
 
 ---
 
-### Phase 5 readiness
+### Phase 6 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| Traffic + visitor pipeline stable | Ready |
-| Page views linked to visitors | Ready |
-| Privacy defaults enforced | Ready |
-| Extension contracts in place | Ready |
-| Error table/model exists | Ready (unused) |
-| Middleware pattern established | Ready for error middleware |
+| Error pipeline stable with safety tests | Ready |
+| `analytics_ip_bans` table/model exists | Ready (unused) |
+| Request exclusion checker shared | Ready |
+| Middleware registration pattern established | Ready for ban middleware |
 
-**Phase 5 scope:** safe HTTP error recording, fingerprint aggregation, rethrow guarantee, sensitive data exclusion tests.
+**Phase 6 scope:** IP banning middleware and enforcement — **not started** (await explicit go-ahead).
 
 ---
 
-## Phase 3 Report (archived summary)
+## Phase 4 Report (archived summary)
 
-Traffic tracking via `TrackTrafficMiddleware` and `PageViewRecorder`. See git history for details.
+Visitor analytics via `VisitorService`, `VisitorAnalytics`, privacy-aware `DefaultVisitorIdentifier`. See git history for full details.
 
 ---
 
 ## Current state (summary)
 
-Traffic and visitor analytics operational when enabled. Privacy-aware hashed identifiers, unique/repeat visitor metrics, optional raw IP storage. No error tracking, IP banning, or dashboard.
+Traffic, visitor, and error analytics operational when enabled. Privacy-aware hashed identifiers, unique/repeat visitor metrics, error fingerprint aggregation with rethrow guarantee. No IP banning or dashboard.
 
 ---
 
@@ -161,13 +149,12 @@ Traffic and visitor analytics operational when enabled. Privacy-aware hashed ide
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0–3** | Discovery → traffic analytics | Complete |
-| **4** | Visitor analytics | **Complete** |
-| **5** | Error analytics | Next |
+| **0–4** | Discovery → visitor analytics | Complete |
+| **5** | Error analytics | **Complete** |
 | **6–12** | Bans, retention, dashboard, OSS, CI, release, hardening | Pending |
 
 ---
 
 ## Next step
 
-**Phase 5 — Error analytics** — await explicit go-ahead.
+**Phase 6 — IP banning** — await explicit go-ahead. Do not begin without instruction.

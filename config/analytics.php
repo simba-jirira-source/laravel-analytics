@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
 
 return [
@@ -123,6 +124,18 @@ return [
     */
 
     'visitor_identifier' => DefaultVisitorIdentifier::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Error Recorder
+    |--------------------------------------------------------------------------
+    |
+    | Replace the default error recorder by binding a custom class that
+    | implements LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder.
+    |
+    */
+
+    'error_recorder' => AnalyticsErrorRecorder::class,
 
     /*
     |--------------------------------------------------------------------------

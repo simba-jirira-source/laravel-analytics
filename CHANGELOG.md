@@ -4,6 +4,8 @@
 
 ### Added
 
+- Safe HTTP error analytics via `RecordErrorsMiddleware` and `AnalyticsErrorRecorder`.
+- Error fingerprinting, safe metadata extraction, and replaceable `analytics.error_recorder` binding.
 - Visitor analytics services (`VisitorService`, `VisitorAnalytics`) and privacy-aware default visitor identification.
 - IP normalization, configurable hash salt, replaceable `analytics.visitor_identifier`, and `docs/VISITOR_IDENTIFICATION.md`.
 - Traffic tracking middleware (`analytics.track-traffic`) and `PageViewRecorder` service.
@@ -12,6 +14,7 @@
 
 ### Changed
 
+- `RequestExclusionChecker` supports error tracking enablement, analytics route exclusions, and precise package-recorder failure detection.
 - `PageViewRecorder` delegates visitor persistence to `VisitorService`.
 - `DefaultVisitorIdentifier` uses salt + normalized IP + optional UA/auth components.
 - Service provider registers traffic middleware when tracking is enabled.
