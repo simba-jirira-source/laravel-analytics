@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CI tests workflow: run Pest type coverage in a dedicated stable job instead of every PHP/Laravel matrix combination; set compatibility matrix `fail-fast` to `false`.
+
 ## [0.6.0] - 2026-08-16
 
 Foundation cleanup before 1.0: namespace migration, database portability CI, performance hardening, release workflow repair, and dependency security auditing.
