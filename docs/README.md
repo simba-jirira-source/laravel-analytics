@@ -23,6 +23,7 @@ User and maintainer documentation for `simba-jirira-source/laravel-analytics`.
 | Document | Description |
 |----------|-------------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Middleware pipeline, services, security boundaries |
+| [RELEASE_READINESS_REPORT.md](RELEASE_READINESS_REPORT.md) | Phase 11 Packagist / release readiness verification |
 | [RELEASES.md](RELEASES.md) | Maintainer release workflow |
 | [OSS_RELEASE_CHECKLIST.md](OSS_RELEASE_CHECKLIST.md) | Open-source readiness checklist |
 | [PACKAGIST_CHECKLIST.md](PACKAGIST_CHECKLIST.md) | Packagist publication checklist |
