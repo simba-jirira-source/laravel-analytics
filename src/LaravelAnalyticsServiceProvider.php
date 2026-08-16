@@ -10,6 +10,7 @@ use Illuminate\Support\ServiceProvider;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpBanCommand;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpUnbanCommand;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPlaceholderCommand;
+use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPruneCommand;
 use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
@@ -17,6 +18,7 @@ use LaravelAnalytics\LaravelAnalytics\Http\Middleware\EnforceIpBanMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
+use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsPruner;
 use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
 use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
 use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
@@ -64,6 +66,7 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $this->app->singleton(VisitorAnalytics::class);
         $this->app->singleton(PageViewRecorder::class);
         $this->app->singleton(AnalyticsErrorRecorder::class);
+        $this->app->singleton(AnalyticsPruner::class);
         $this->app->singleton(IpBanService::class);
         $this->app->singleton(IpUnbanService::class);
 
@@ -111,6 +114,7 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
             AnalyticsPlaceholderCommand::class,
             AnalyticsIpBanCommand::class,
             AnalyticsIpUnbanCommand::class,
+            AnalyticsPruneCommand::class,
         ]);
     }
 

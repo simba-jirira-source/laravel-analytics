@@ -4,6 +4,8 @@
 
 ### Added
 
+- Configurable analytics retention pruning via `AnalyticsPruner` and `analytics:prune`.
+- `docs/RETENTION.md` with retention settings and host-application scheduling guidance.
 - Optional IP banning via `EnforceIpBanMiddleware`, `IpBanService`, and `IpUnbanService`.
 - Exact IPv4/IPv6 validation, expiry support, and CLI recovery commands (`analytics:ip-ban`, `analytics:ip-unban`).
 - Safe HTTP error analytics via `RecordErrorsMiddleware` and `AnalyticsErrorRecorder`.

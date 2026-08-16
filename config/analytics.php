@@ -194,6 +194,8 @@ return [
 
         'prune_errors' => true,
 
+        'prune_ip_bans' => true,
+
     ],
 
     /*

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use LaravelAnalytics\LaravelAnalytics\Tests\DatabaseTestCase;
 use LaravelAnalytics\LaravelAnalytics\Tests\ErrorTrackingTestCase;
 use LaravelAnalytics\LaravelAnalytics\Tests\IpBanningTestCase;
+use LaravelAnalytics\LaravelAnalytics\Tests\RetentionTestCase;
 use LaravelAnalytics\LaravelAnalytics\Tests\TestCase;
 use LaravelAnalytics\LaravelAnalytics\Tests\TrackingTestCase;
 
@@ -17,6 +18,8 @@ uses(TrackingTestCase::class)->in('Tracking');
 uses(ErrorTrackingTestCase::class)->in('ErrorTracking');
 
 uses(IpBanningTestCase::class)->in('IpBanning');
+
+uses(RetentionTestCase::class)->in('Retention');
 
 function runtimeExceptionWithMessage(string $message): RuntimeException
 {

@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 6 complete (IP banning). No retention pruning or dashboard.
+> **Status:** Phase 7 complete (retention and maintenance). No dashboard.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,34 +8,43 @@
 
 ---
 
-## Phase 6 Report
+## Phase 7 Report
 
 ### What was implemented
 
-Phase 6 added opt-in exact IP banning with CLI recovery and middleware enforcement:
+Phase 7 added configurable, idempotent analytics retention pruning:
 
-- **`IpBanService`** — validates and normalizes IPv4/IPv6 addresses, creates or reactivates bans with optional reason, expiry, and `banned_by`.
-- **`IpUnbanService`** — deactivates active bans for a validated IP address.
-- **`IpAddressValidator`** — rejects invalid addresses and CIDR ranges; normalizes via `IpAddressNormalizer`.
-- **`EnforceIpBanMiddleware`** — blocks banned client IPs with configurable status code; uses Laravel's `Request::ip()` (trusted-proxy aware).
-- **`IpBan` model enhancements** — `active` scope, expiry helpers, `findActiveForIp()`.
-- **`RequestExclusionChecker` (extended)** — `isIpBanningEnabled()`, `shouldBypassIpBan()` for analytics dashboard paths/routes.
-- **CLI recovery commands** — `analytics:ip-ban` and `analytics:ip-unban`.
+- **`AnalyticsPruner`** — prunes page views, visitors, errors, and IP ban records according to `analytics.retention` settings.
+- **`analytics:prune` command** — reports per-type removal counts; supports optional `--days` override.
+- **`analytics.retention.prune_ip_bans`** — deactivates expired bans and removes old expired/inactive ban records.
+- **`docs/RETENTION.md`** — retention configuration reference and host-application scheduling guidance.
 
-**Not implemented (by design):** CIDR/range bans, Livewire ban manager UI, dashboard authorization UI, retention pruning (Phase 7).
+**Not implemented (by design):** automatic schedule registration, dashboard UI, Phase 8+ features.
 
 ---
 
-### Safety and opt-in behaviour
+### Retention behaviour
+
+| Record type | Cutoff field | Prune toggle |
+|-------------|--------------|--------------|
+| Page views | `viewed_at` | `prune_page_views` |
+| Visitors | `last_seen_at` (only when no retained page views remain) | `prune_visitors` |
+| Errors | `last_occurred_at` | `prune_errors` |
+| IP bans | `expires_at` / inactive `banned_at` | `prune_ip_bans` |
+
+Default retention window: **90 days**. Each prune toggle can be disabled independently.
+
+---
+
+### Safety guarantees
 
 | Guarantee | Mechanism |
 |-----------|-----------|
-| Disabled by default | Requires `analytics.enabled` **and** `analytics.ip_banning.enabled` |
-| No lockout on install | Middleware not registered until explicitly enabled |
-| Dashboard access preserved | Ignored `analytics` paths/routes bypass ban enforcement |
-| Trusted proxy safety | Uses `$request->ip()`; relies on host app trusted-proxy config |
-| Exact IP only | Validator rejects CIDR (`/`) and invalid addresses |
-| CLI recovery | `analytics:ip-unban <ip>` reverses bans without dashboard access |
+| Configurable | Per-type toggles and `days` setting in config; `--days` CLI override |
+| Idempotent | Second run removes zero additional eligible records |
+| Safe to repeat | Cutoff-based deletes only; no table truncation |
+| No silent scheduling | Package does not register Laravel schedules |
+| Visitor integrity | Visitors with retained page views are not removed |
 
 ---
 
@@ -43,21 +52,14 @@ Phase 6 added opt-in exact IP banning with CLI recovery and middleware enforceme
 
 | Action | Path |
 |--------|------|
-| Created | `src/Services/IpBanService.php` |
-| Created | `src/Services/IpUnbanService.php` |
-| Created | `src/Support/IpAddressValidator.php` |
-| Created | `src/Http/Middleware/EnforceIpBanMiddleware.php` |
-| Created | `src/Console/Commands/AnalyticsIpBanCommand.php` |
-| Created | `src/Console/Commands/AnalyticsIpUnbanCommand.php` |
-| Created | `tests/IpBanningTestCase.php` |
-| Created | `tests/Unit/IpAddressValidatorTest.php` |
-| Created | `tests/Database/IpBanServiceTest.php` |
-| Created | `tests/IpBanning/IpBanningTest.php` |
-| Created | `tests/IpBanning/IpBanCommandsTest.php` |
-| Modified | `src/Models/IpBan.php` |
-| Modified | `src/Support/RequestExclusionChecker.php` |
+| Created | `src/Services/AnalyticsPruner.php` |
+| Created | `src/Console/Commands/AnalyticsPruneCommand.php` |
+| Created | `docs/RETENTION.md` |
+| Created | `tests/RetentionTestCase.php` |
+| Created | `tests/Database/AnalyticsPrunerTest.php` |
+| Created | `tests/Retention/AnalyticsPruneCommandTest.php` |
+| Modified | `config/analytics.php` |
 | Modified | `src/LaravelAnalyticsServiceProvider.php` |
-| Modified | `tests/DatabaseTestCase.php` |
 | Modified | `tests/Pest.php` |
 | Modified | `tests/Unit/ConfigTest.php` |
 | Modified | `phpunit.xml.dist` |
@@ -70,12 +72,10 @@ Phase 6 added opt-in exact IP banning with CLI recovery and middleware enforceme
 
 | File | Coverage |
 |------|----------|
-| `tests/Unit/IpAddressValidatorTest.php` | IPv4/IPv6 acceptance, invalid rejection, CIDR rejection |
-| `tests/Database/IpBanServiceTest.php` | Ban/unban, normalization, reactivation, expiry, inactive state |
-| `tests/IpBanning/IpBanningTest.php` | Middleware blocking, opt-in, expiry, unban, dashboard bypass, status code |
-| `tests/IpBanning/IpBanCommandsTest.php` | CLI ban/unban, validation, recovery messaging |
+| `tests/Database/AnalyticsPrunerTest.php` | Cutoff pruning, visitor safety, IP ban maintenance, toggles, idempotency, custom days |
+| `tests/Retention/AnalyticsPruneCommandTest.php` | CLI execution, `--days` override, invalid input, repeated runs |
 
-**Suite totals after Phase 6:** 116 tests, 256 assertions.
+**Suite totals after Phase 7:** 129 tests, 287 assertions.
 
 ---
 
@@ -96,7 +96,19 @@ composer verify
 | PHPStan (level 7) | Passed |
 | Pint | Passed |
 | Pest type coverage | 100% |
-| Pest test suite | **116 passed** (5230 ms) |
+| Pest test suite | **129 passed** (6255 ms) |
+
+---
+
+### Scheduling documentation
+
+Host applications should register pruning explicitly, for example:
+
+```php
+Schedule::command('analytics:prune')->daily();
+```
+
+See [`docs/RETENTION.md`](RETENTION.md) for full configuration and safety notes.
 
 ---
 
@@ -104,37 +116,36 @@ composer verify
 
 | Item | Status |
 |------|--------|
-| Exact IP bans only (no CIDR) | By design per Phase 6 spec |
-| Shared-NAT false positives | Documented limitation for host apps |
-| Ban middleware prepended to `web` when enabled | Host apps must enable explicitly |
-| Dashboard ban UI deferred to Phase 8 | CLI recovery available now |
+| Large datasets may need chunked pruning in future | Acceptable for initial release |
+| Host must choose appropriate schedule cadence | Documented |
+| Retention does not require `analytics.enabled` | Allows cleanup when tracking is off |
 
-**No blockers prevent Phase 7.**
+**No blockers prevent Phase 8.**
 
 ---
 
-### Phase 7 readiness
+### Phase 8 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| IP ban pipeline stable with tests | Ready |
-| Retention config exists | Ready (unused) |
-| Expired ban model/factory states | Ready for prune command |
-| Console command registration pattern | Ready |
+| Analytics data pipeline complete | Ready |
+| Retention/maintenance command available | Ready |
+| Dashboard config scaffold exists | Ready (disabled) |
+| Authorization config placeholder exists | Ready |
 
-**Phase 7 scope:** retention pruning and maintenance commands — **not started** (await explicit go-ahead).
+**Phase 8 scope:** Livewire dashboard — **not started** (await explicit go-ahead).
 
 ---
 
-## Phase 5 Report (archived summary)
+## Phase 6 Report (archived summary)
 
-Safe HTTP error analytics via `RecordErrorsMiddleware`, fingerprint aggregation, and rethrow guarantee. See git history for full details.
+Opt-in IP banning with IPv4/IPv6 exact-match support, middleware enforcement, and CLI recovery. See git history for full details.
 
 ---
 
 ## Current state (summary)
 
-Traffic, visitor, and error analytics operational when enabled. Opt-in IP banning with IPv4/IPv6 exact-match support, expiry, middleware enforcement, and CLI recovery. No retention pruning or dashboard.
+Traffic, visitor, error, and IP ban features operational when enabled. Configurable retention pruning via `analytics:prune`. No dashboard.
 
 ---
 
@@ -142,12 +153,12 @@ Traffic, visitor, and error analytics operational when enabled. Opt-in IP bannin
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0–5** | Discovery → error analytics | Complete |
-| **6** | IP banning | **Complete** |
-| **7–12** | Retention, dashboard, OSS, CI, release, hardening | Pending |
+| **0–6** | Discovery → IP banning | Complete |
+| **7** | Retention and maintenance | **Complete** |
+| **8–12** | Dashboard, OSS, CI, release, hardening | Pending |
 
 ---
 
 ## Next step
 
-**Phase 7 — Retention and maintenance** — await explicit go-ahead. Do not begin without instruction.
+**Phase 8 — Livewire dashboard** — await explicit go-ahead. Do not begin without instruction.

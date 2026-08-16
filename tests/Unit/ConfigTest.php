@@ -30,7 +30,8 @@ it('defines retention defaults', function () {
     expect(config('analytics.retention.days'))->toBe(90)
         ->and(config('analytics.retention.prune_page_views'))->toBeTrue()
         ->and(config('analytics.retention.prune_visitors'))->toBeTrue()
-        ->and(config('analytics.retention.prune_errors'))->toBeTrue();
+        ->and(config('analytics.retention.prune_errors'))->toBeTrue()
+        ->and(config('analytics.retention.prune_ip_bans'))->toBeTrue();
 });
 
 it('does not bind a host user model by default', function () {
