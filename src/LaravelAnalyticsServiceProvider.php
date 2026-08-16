@@ -7,13 +7,18 @@ namespace LaravelAnalytics\LaravelAnalytics;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpBanCommand;
+use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpUnbanCommand;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPlaceholderCommand;
 use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
+use LaravelAnalytics\LaravelAnalytics\Http\Middleware\EnforceIpBanMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
+use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
+use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
 use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
 use LaravelAnalytics\LaravelAnalytics\Services\VisitorAnalytics;
 use LaravelAnalytics\LaravelAnalytics\Services\VisitorService;
@@ -21,6 +26,7 @@ use LaravelAnalytics\LaravelAnalytics\Support\AnalyticsHashSalt;
 use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
 use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
 use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
+use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
 use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
 use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
 
@@ -38,6 +44,7 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $this->app->singleton(RequestExclusionChecker::class);
         $this->app->singleton(AnalyticsHashSalt::class);
         $this->app->singleton(IpAddressNormalizer::class);
+        $this->app->singleton(IpAddressValidator::class);
         $this->app->singleton(ErrorFingerprintGenerator::class);
         $this->app->singleton(SafeExceptionMetadataExtractor::class);
 
@@ -57,6 +64,8 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $this->app->singleton(VisitorAnalytics::class);
         $this->app->singleton(PageViewRecorder::class);
         $this->app->singleton(AnalyticsErrorRecorder::class);
+        $this->app->singleton(IpBanService::class);
+        $this->app->singleton(IpUnbanService::class);
 
         $this->app->alias(PageViewRecorder::class, AnalyticsRecorder::class);
     }
@@ -100,6 +109,8 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
 
         $this->commands([
             AnalyticsPlaceholderCommand::class,
+            AnalyticsIpBanCommand::class,
+            AnalyticsIpUnbanCommand::class,
         ]);
     }
 
@@ -110,6 +121,11 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
 
         $router->aliasMiddleware('analytics.track-traffic', TrackTrafficMiddleware::class);
         $router->aliasMiddleware('analytics.record-errors', RecordErrorsMiddleware::class);
+        $router->aliasMiddleware('analytics.enforce-ip-ban', EnforceIpBanMiddleware::class);
+
+        if (config('analytics.enabled') && config('analytics.ip_banning.enabled')) {
+            $router->prependMiddlewareToGroup('web', EnforceIpBanMiddleware::class);
+        }
 
         if (config('analytics.enabled') && config('analytics.tracking.traffic')) {
             $router->pushMiddlewareToGroup('web', TrackTrafficMiddleware::class);

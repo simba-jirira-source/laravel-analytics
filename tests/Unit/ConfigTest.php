@@ -7,7 +7,8 @@ it('defaults analytics features to disabled', function () {
         ->and(config('analytics.dashboard.enabled'))->toBeFalse()
         ->and(config('analytics.tracking.traffic'))->toBeFalse()
         ->and(config('analytics.tracking.errors'))->toBeFalse()
-        ->and(config('analytics.ip_banning.enabled'))->toBeFalse();
+        ->and(config('analytics.ip_banning.enabled'))->toBeFalse()
+        ->and(config('analytics.ip_banning.blocked_status'))->toBe(403);
 });
 
 it('defaults privacy settings to conservative values', function () {

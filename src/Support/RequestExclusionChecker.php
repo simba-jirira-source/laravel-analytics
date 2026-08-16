@@ -22,6 +22,31 @@ class RequestExclusionChecker
             && (bool) config('analytics.tracking.errors');
     }
 
+    public function isIpBanningEnabled(): bool
+    {
+        return (bool) config('analytics.enabled')
+            && (bool) config('analytics.ip_banning.enabled');
+    }
+
+    public function shouldBypassIpBan(Request $request): bool
+    {
+        if ($this->isIgnoredMethod($request->method())) {
+            return true;
+        }
+
+        if ($this->isIgnoredPath($request->path())) {
+            return true;
+        }
+
+        $routeName = $request->route()?->getName();
+
+        if ($routeName !== null && $this->isIgnoredRouteName($routeName)) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function shouldRecordError(Request $request, Throwable $throwable): bool
     {
         if (! $this->isErrorTrackingEnabled()) {

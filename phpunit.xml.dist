@@ -31,6 +31,9 @@
         <testsuite name="ErrorTracking">
             <directory>tests/ErrorTracking</directory>
         </testsuite>
+        <testsuite name="IpBanning">
+            <directory>tests/IpBanning</directory>
+        </testsuite>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>

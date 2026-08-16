@@ -17,7 +17,7 @@ abstract class DatabaseTestCase extends TestCase
 
         $app['config']->set('database.connections.testbench', [
             'driver' => 'sqlite',
-            'database' => ':memory:',
+            'database' => 'file:laravel_analytics_test?mode=memory&cache=shared',
             'prefix' => '',
             'foreign_key_constraints' => true,
         ]);

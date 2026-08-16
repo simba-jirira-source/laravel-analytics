@@ -4,6 +4,8 @@
 
 ### Added
 
+- Optional IP banning via `EnforceIpBanMiddleware`, `IpBanService`, and `IpUnbanService`.
+- Exact IPv4/IPv6 validation, expiry support, and CLI recovery commands (`analytics:ip-ban`, `analytics:ip-unban`).
 - Safe HTTP error analytics via `RecordErrorsMiddleware` and `AnalyticsErrorRecorder`.
 - Error fingerprinting, safe metadata extraction, and replaceable `analytics.error_recorder` binding.
 - Visitor analytics services (`VisitorService`, `VisitorAnalytics`) and privacy-aware default visitor identification.
@@ -14,7 +16,7 @@
 
 ### Changed
 
-- `RequestExclusionChecker` supports error tracking enablement, analytics route exclusions, and precise package-recorder failure detection.
+- `RequestExclusionChecker` supports error tracking enablement, IP ban bypass rules, analytics route exclusions, and precise package-recorder failure detection.
 - `PageViewRecorder` delegates visitor persistence to `VisitorService`.
 - `DefaultVisitorIdentifier` uses salt + normalized IP + optional UA/auth components.
 - Service provider registers traffic middleware when tracking is enabled.

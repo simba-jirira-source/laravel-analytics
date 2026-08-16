@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 5 complete (error analytics). No IP banning or dashboard.
+> **Status:** Phase 6 complete (IP banning). No retention pruning or dashboard.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,44 +8,34 @@
 
 ---
 
-## Phase 5 Report
+## Phase 6 Report
 
 ### What was implemented
 
-Phase 5 added safe HTTP error analytics with strict failure isolation and Laravel exception preservation:
+Phase 6 added opt-in exact IP banning with CLI recovery and middleware enforcement:
 
-- **`RecordErrorsMiddleware`** — wraps the request pipeline, records on `catch (Throwable)`, always rethrows the original exception.
-- **`AnalyticsErrorRecorder`** — persists and aggregates `AnalyticsError` rows by SHA-256 fingerprint; increments `occurrence_count` and updates `last_occurred_at`.
-- **`ErrorFingerprintGenerator`** — stable fingerprint from exception class, file, line, and redacted message.
-- **`SafeExceptionMetadataExtractor`** — safe metadata only (class, sanitized message, route, path, method, status, file, line); no request bodies, cookies, tokens, or headers.
-- **`ErrorRecorder` contract** + **`analytics.error_recorder` config** — replaceable recorder binding.
-- **`RequestExclusionChecker` (extended)** — `isErrorTrackingEnabled()`, `shouldRecordError()`, ignored dashboard paths/routes, and precise package-recorder failure detection (avoids false positives from test class filenames).
+- **`IpBanService`** — validates and normalizes IPv4/IPv6 addresses, creates or reactivates bans with optional reason, expiry, and `banned_by`.
+- **`IpUnbanService`** — deactivates active bans for a validated IP address.
+- **`IpAddressValidator`** — rejects invalid addresses and CIDR ranges; normalizes via `IpAddressNormalizer`.
+- **`EnforceIpBanMiddleware`** — blocks banned client IPs with configurable status code; uses Laravel's `Request::ip()` (trusted-proxy aware).
+- **`IpBan` model enhancements** — `active` scope, expiry helpers, `findActiveForIp()`.
+- **`RequestExclusionChecker` (extended)** — `isIpBanningEnabled()`, `shouldBypassIpBan()` for analytics dashboard paths/routes.
+- **CLI recovery commands** — `analytics:ip-ban` and `analytics:ip-unban`.
 
-**Not implemented (by design):** IP ban middleware, dashboard, queue-backed error recording, Phase 6+ features.
+**Not implemented (by design):** CIDR/range bans, Livewire ban manager UI, dashboard authorization UI, retention pruning (Phase 7).
 
 ---
 
-### Safety guarantees
+### Safety and opt-in behaviour
 
 | Guarantee | Mechanism |
 |-----------|-----------|
-| Laravel exception behaviour preserved | Middleware always `throw $throwable` after recording |
-| No sensitive request data stored | Metadata extractor never reads body/query/cookies/headers; message redaction for secrets |
-| Failure isolation | `recordSafely()` swallows recorder failures; package recorder failures excluded from persistence |
-| Dashboard self-exclusion | Same `analytics.ignored` paths/routes as traffic tracking |
-| Disabled by default | Requires `analytics.enabled` **and** `analytics.tracking.errors` |
-
----
-
-### Privacy decisions
-
-| Data | Stored? | Notes |
-|------|---------|-------|
-| Request body / query | No | Never read by error recorder |
-| Cookies / Authorization headers | No | Never read |
-| Exception message | Yes (sanitized) | Password/token/secret patterns redacted; truncated to 1000 chars |
-| Path / method / route name | Yes | Same safe fields as traffic analytics |
-| Exception file / line | Yes | From throwable only, not request context |
+| Disabled by default | Requires `analytics.enabled` **and** `analytics.ip_banning.enabled` |
+| No lockout on install | Middleware not registered until explicitly enabled |
+| Dashboard access preserved | Ignored `analytics` paths/routes bypass ban enforcement |
+| Trusted proxy safety | Uses `$request->ip()`; relies on host app trusted-proxy config |
+| Exact IP only | Validator rejects CIDR (`/`) and invalid addresses |
+| CLI recovery | `analytics:ip-unban <ip>` reverses bans without dashboard access |
 
 ---
 
@@ -53,36 +43,39 @@ Phase 5 added safe HTTP error analytics with strict failure isolation and Larave
 
 | Action | Path |
 |--------|------|
-| Created | `src/Contracts/ErrorRecorder.php` |
-| Created | `src/Http/Middleware/RecordErrorsMiddleware.php` |
-| Created | `src/Services/AnalyticsErrorRecorder.php` |
-| Created | `src/Support/ErrorFingerprintGenerator.php` |
-| Created | `src/Support/SafeExceptionMetadataExtractor.php` |
-| Created | `tests/ErrorTrackingTestCase.php` |
-| Created | `tests/ErrorTracking/ErrorTrackingTest.php` |
-| Created | `tests/Unit/ErrorFingerprintGeneratorTest.php` |
-| Created | `tests/Unit/SafeExceptionMetadataExtractorTest.php` |
-| Created | `tests/Database/AnalyticsErrorRecorderTest.php` |
+| Created | `src/Services/IpBanService.php` |
+| Created | `src/Services/IpUnbanService.php` |
+| Created | `src/Support/IpAddressValidator.php` |
+| Created | `src/Http/Middleware/EnforceIpBanMiddleware.php` |
+| Created | `src/Console/Commands/AnalyticsIpBanCommand.php` |
+| Created | `src/Console/Commands/AnalyticsIpUnbanCommand.php` |
+| Created | `tests/IpBanningTestCase.php` |
+| Created | `tests/Unit/IpAddressValidatorTest.php` |
+| Created | `tests/Database/IpBanServiceTest.php` |
+| Created | `tests/IpBanning/IpBanningTest.php` |
+| Created | `tests/IpBanning/IpBanCommandsTest.php` |
+| Modified | `src/Models/IpBan.php` |
 | Modified | `src/Support/RequestExclusionChecker.php` |
 | Modified | `src/LaravelAnalyticsServiceProvider.php` |
-| Modified | `config/analytics.php` |
+| Modified | `tests/DatabaseTestCase.php` |
 | Modified | `tests/Pest.php` |
+| Modified | `tests/Unit/ConfigTest.php` |
 | Modified | `phpunit.xml.dist` |
 | Modified | `CHANGELOG.md` |
 | Modified | `docs/IMPLEMENTATION_PLAN.md` |
 
 ---
 
-### Tests added (safety regressions)
+### Tests added
 
 | File | Coverage |
 |------|----------|
-| `tests/Unit/ErrorFingerprintGeneratorTest.php` | Stable fingerprints, class differentiation, sensitive message redaction |
-| `tests/Unit/SafeExceptionMetadataExtractorTest.php` | Safe metadata, HTTP status resolution, message redaction |
-| `tests/Database/AnalyticsErrorRecorderTest.php` | Record, aggregate, disabled tracking, package failure exclusion, middleware isolation |
-| `tests/ErrorTracking/ErrorTrackingTest.php` | Rethrow guarantee, disabled tracking, fingerprint grouping, HTTP status, no payload leakage, dashboard exclusion, recorder failure isolation |
+| `tests/Unit/IpAddressValidatorTest.php` | IPv4/IPv6 acceptance, invalid rejection, CIDR rejection |
+| `tests/Database/IpBanServiceTest.php` | Ban/unban, normalization, reactivation, expiry, inactive state |
+| `tests/IpBanning/IpBanningTest.php` | Middleware blocking, opt-in, expiry, unban, dashboard bypass, status code |
+| `tests/IpBanning/IpBanCommandsTest.php` | CLI ban/unban, validation, recovery messaging |
 
-**Suite totals after Phase 5:** 86 tests, 203 assertions.
+**Suite totals after Phase 6:** 116 tests, 256 assertions.
 
 ---
 
@@ -103,7 +96,7 @@ composer verify
 | PHPStan (level 7) | Passed |
 | Pint | Passed |
 | Pest type coverage | 100% |
-| Pest test suite | **86 passed** (4936 ms) |
+| Pest test suite | **116 passed** (5230 ms) |
 
 ---
 
@@ -111,37 +104,37 @@ composer verify
 
 | Item | Status |
 |------|--------|
-| Fingerprint includes file/line (refactors change grouping) | Expected trade-off; documented behaviour |
-| Message redaction is pattern-based, not exhaustive | Host apps with custom recorders can tighten |
-| Error middleware prepended to `web` when enabled | Host apps must enable explicitly |
-| No sampling or rate limiting on error volume | Future enhancement |
+| Exact IP bans only (no CIDR) | By design per Phase 6 spec |
+| Shared-NAT false positives | Documented limitation for host apps |
+| Ban middleware prepended to `web` when enabled | Host apps must enable explicitly |
+| Dashboard ban UI deferred to Phase 8 | CLI recovery available now |
 
-**No blockers prevent Phase 6.**
+**No blockers prevent Phase 7.**
 
 ---
 
-### Phase 6 readiness
+### Phase 7 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| Error pipeline stable with safety tests | Ready |
-| `analytics_ip_bans` table/model exists | Ready (unused) |
-| Request exclusion checker shared | Ready |
-| Middleware registration pattern established | Ready for ban middleware |
+| IP ban pipeline stable with tests | Ready |
+| Retention config exists | Ready (unused) |
+| Expired ban model/factory states | Ready for prune command |
+| Console command registration pattern | Ready |
 
-**Phase 6 scope:** IP banning middleware and enforcement — **not started** (await explicit go-ahead).
+**Phase 7 scope:** retention pruning and maintenance commands — **not started** (await explicit go-ahead).
 
 ---
 
-## Phase 4 Report (archived summary)
+## Phase 5 Report (archived summary)
 
-Visitor analytics via `VisitorService`, `VisitorAnalytics`, privacy-aware `DefaultVisitorIdentifier`. See git history for full details.
+Safe HTTP error analytics via `RecordErrorsMiddleware`, fingerprint aggregation, and rethrow guarantee. See git history for full details.
 
 ---
 
 ## Current state (summary)
 
-Traffic, visitor, and error analytics operational when enabled. Privacy-aware hashed identifiers, unique/repeat visitor metrics, error fingerprint aggregation with rethrow guarantee. No IP banning or dashboard.
+Traffic, visitor, and error analytics operational when enabled. Opt-in IP banning with IPv4/IPv6 exact-match support, expiry, middleware enforcement, and CLI recovery. No retention pruning or dashboard.
 
 ---
 
@@ -149,12 +142,12 @@ Traffic, visitor, and error analytics operational when enabled. Privacy-aware ha
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0–4** | Discovery → visitor analytics | Complete |
-| **5** | Error analytics | **Complete** |
-| **6–12** | Bans, retention, dashboard, OSS, CI, release, hardening | Pending |
+| **0–5** | Discovery → error analytics | Complete |
+| **6** | IP banning | **Complete** |
+| **7–12** | Retention, dashboard, OSS, CI, release, hardening | Pending |
 
 ---
 
 ## Next step
 
-**Phase 6 — IP banning** — await explicit go-ahead. Do not begin without instruction.
+**Phase 7 — Retention and maintenance** — await explicit go-ahead. Do not begin without instruction.
