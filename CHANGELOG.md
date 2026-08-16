@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-16
+
+First public pre-release: traffic tracking, visitor analytics, error analytics, IP banning, Livewire dashboard, retention pruning, OSS documentation, CI/CD, and Phase 12 hardening.
+
 ### Added
 
 - Open-source documentation: README, installation, configuration, privacy, architecture, dashboard, and release guides.
@@ -21,6 +25,11 @@
 - Traffic tracking middleware and `PageViewRecorder` service.
 - Request exclusion checker, analytics recorder contracts, and domain persistence layer.
 - Package foundation: Composer metadata, `composer verify`, and normalized `analytics-*` publish tags.
+- GitHub Actions workflows for tests, static analysis, code style, and tag-driven releases; Dependabot configuration.
+- `SensitiveMessageRedactor` for unified error message redaction.
+- `analytics_recorder` config key for replaceable traffic recorder binding.
+- `ip_banning.bypass_paths` and `ip_banning.bypass_route_names` for explicit IP-ban bypass configuration.
+- `docs/V1_READINESS_REPORT.md` from Phase 12 hardening review.
 
 ### Changed
 
@@ -28,10 +37,27 @@
 - `composer test` now runs `@prepare` before static analysis so Larastan resolves package views.
 - PHPStan bootstrap registers the `analytics` view namespace when Larastan does not load package views.
 - `RequestExclusionChecker` supports error tracking enablement, IP ban bypass rules, analytics route exclusions, and safe recorder failure handling.
-- `PageViewRecorder` delegates visitor persistence to `VisitorService`.
+- `PageViewRecorder` delegates visitor persistence to `VisitorService` and wraps writes in a database transaction.
 - `DefaultVisitorIdentifier` uses salt + normalized IP + optional UA/auth components.
 - Service provider registers traffic, error, and IP-ban middleware when respective features are enabled.
 - Added `illuminate/database`, `illuminate/http`, and `illuminate/routing` runtime dependencies.
 - Replaced skeleton placeholder migration with domain schema; normalized config and publish tags.
+- All dashboard Livewire components authorize on every request via `bootInteractsWithAnalyticsDashboard()`.
+- IP bans no longer bypass via `analytics.ignored.paths`; use `ip_banning.bypass_paths` when recovery access is required.
+- Dashboard `visits` metric counts distinct visitor-days (semantically distinct from `unique_visitors`).
+- Referrer URLs are stored without query strings.
+- `AnalyticsErrorRecorder` uses atomic database increments for occurrence counts.
+- Invalid `ip_banning.blocked_status` values fall back to 403.
 
-No tagged releases exist yet.
+### Fixed
+
+- Livewire dashboard authorization bypass on child components (`TrafficOverview`, `RecentErrors`, `ErrorDetails`, etc.).
+- Race conditions when aggregating errors by fingerprint under concurrent requests.
+- Duplicate `visits` and `unique_visitors` dashboard metrics returning identical values.
+
+### Removed
+
+- `analytics:placeholder` scaffold command, placeholder view, and translation file.
+- Unwired config keys: `dashboard.cache_ttl`, `trusted_proxies`, and `user.model` / `user.foreign_key`.
+
+[0.5.0]: https://github.com/simba-jirira-source/laravel-analytics/releases/tag/v0.5.0

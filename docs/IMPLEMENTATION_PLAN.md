@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 12 complete (1.0 hardening). Awaiting maintainer release decision.
+> **Status:** Phase 12 complete. **Released `v0.5.0`** — Packagist registration pending maintainer action.
 >
 > **Last updated:** 2026-08-16
 >
@@ -46,7 +46,7 @@ CI on Ubuntu remains the authoritative gate before tagging.
 
 ### Verdict
 
-**Ready for maintainer-led `1.0.0`** after green CI, Packagist registration, and annotated tag push. See V1 readiness report for unresolved risks and backwards-compatibility notes.
+**Released `v0.5.0`** on 2026-08-16. GitHub Release created by CI on tag push. Packagist registration remains a maintainer step — see [PACKAGIST_CHECKLIST.md](PACKAGIST_CHECKLIST.md).
 
 ---
 
@@ -125,10 +125,10 @@ Feature-complete pre-1.0 package with OSS docs, CI/CD, Packagist-ready metadata,
 |-------|-------|--------|
 | **0–10** | Discovery → GitHub Actions | Complete |
 | **11** | Packagist / release readiness | **Complete** |
-| **12** | v1 hardening | **Complete** |
+| **12** | v1 hardening | **Complete** — released as `v0.5.0` |
 
 ---
 
 ## Next step
 
-**Maintainer release decision** — review [V1_READINESS_REPORT.md](V1_READINESS_REPORT.md), confirm green CI, register Packagist, tag `v1.0.0` when ready.
+**Packagist** — register `simba-jirira-source/laravel-analytics` and verify `composer require` in a clean Laravel app. See [PACKAGIST_CHECKLIST.md](PACKAGIST_CHECKLIST.md).
