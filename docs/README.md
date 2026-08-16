@@ -1,24 +1,48 @@
-# Laravel Analytics — Cursor Development Pack
+# Documentation index
 
-Use this pack with Laravel's official package skeleton to build `laravel-analytics` incrementally as a public Composer/Laravel package.
+User and maintainer documentation for `simba-jirira-source/laravel-analytics`.
 
-## Start
+## Getting started
 
-```powershell
-cd E:\projects
-laravel package laravel-analytics
-cd laravel-analytics
-cursor .
-```
+| Document | Description |
+|----------|-------------|
+| [INSTALLATION.md](INSTALLATION.md) | Install, publish, migrate, enable features |
+| [CONFIGURATION.md](CONFIGURATION.md) | All `config/analytics.php` settings |
+| [DASHBOARD.md](DASHBOARD.md) | Optional Livewire dashboard |
 
-Copy this pack into the repository, preferably under `docs/cursor/`.
+## Privacy and data
 
-## Prompt order
+| Document | Description |
+|----------|-------------|
+| [PRIVACY.md](PRIVACY.md) | What is collected and excluded by default |
+| [VISITOR_IDENTIFICATION.md](VISITOR_IDENTIFICATION.md) | Visitor hash strategy and limitations |
+| [RETENTION.md](RETENTION.md) | Retention settings and `analytics:prune` |
 
-1. `00_LARAVEL_AGENT_BOOTSTRAP.md`
-2. `CURSOR_LARAVEL_ANALYTICS_MASTER_PROMPT.md`
-3. `phases/PHASE_00_DISCOVERY.md`
-4. Review `docs/IMPLEMENTATION_PLAN.md`
-5. Run Phase 1 through Phase 12 one at a time.
+## Internals and release
 
-Do not use `laravel new laravel-analytics`; that creates a full application rather than a reusable package.
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Middleware pipeline, services, security boundaries |
+| [RELEASES.md](RELEASES.md) | Maintainer release workflow |
+| [OSS_RELEASE_CHECKLIST.md](OSS_RELEASE_CHECKLIST.md) | Open-source readiness checklist |
+| [PACKAGIST_CHECKLIST.md](PACKAGIST_CHECKLIST.md) | Packagist publication checklist |
+
+## Development
+
+| Document | Description |
+|----------|-------------|
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Phase status and implementation reports |
+| [SETUP_AND_WORKFLOW.md](SETUP_AND_WORKFLOW.md) | Local development workflow |
+| [GIT_WORKFLOW.md](GIT_WORKFLOW.md) | Git branching guidance |
+
+## Phase specifications
+
+Detailed build prompts live in [phases/](phases/).
+
+## Repository root
+
+- [README.md](../README.md)
+- [CONTRIBUTING.md](../.github/CONTRIBUTING.md)
+- [SECURITY.md](../.github/SECURITY.md)
+- [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)
+- [CHANGELOG.md](../CHANGELOG.md)

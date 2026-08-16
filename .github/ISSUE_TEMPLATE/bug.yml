@@ -36,6 +36,15 @@ body:
       required: true
 
   - type: input
+    id: database
+    attributes:
+      label: Database
+      description: Database driver and version used by the host application, if relevant.
+      placeholder: SQLite, MySQL 8.4, PostgreSQL 16
+    validations:
+      required: false
+
+  - type: input
     id: operating-system
     attributes:
       label: Operating System
@@ -53,12 +62,36 @@ body:
       required: true
 
   - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
     id: steps-to-reproduce
     attributes:
       label: Steps To Reproduce
       description: Provide detailed steps to reproduce the issue. A minimal reproduction repository is helpful when possible.
     validations:
       required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log excerpts. Redact secrets, tokens, cookies, and personal data.
+    validations:
+      required: false
 
   - type: textarea
     id: notes

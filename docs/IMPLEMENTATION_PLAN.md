@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 8 complete (Livewire dashboard). Phase 9 not started.
+> **Status:** Phase 9 complete (OSS documentation). Phase 10 not started.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,52 +8,42 @@
 
 ---
 
-## Phase 8 Report
+## Phase 9 Report
 
 ### What was implemented
 
-Phase 8 added an **opt-in Livewire 4 analytics dashboard** with Blade + Tailwind-compatible markup:
+Phase 9 completed open-source documentation and repository community files. All content reflects the **actual** package implementation; no fabricated releases, statistics, or security contacts were added.
 
-- **`AnalyticsDashboardQuery`** — KPIs, traffic trend, top pages/referrers, status breakdown, recent errors, IP ban listing.
-- **`DashboardAuthorizer`** + **`AuthorizeAnalyticsDashboard` middleware** — gate name or invokable class authorization; denies by default.
-- **Nine Livewire components** — overview, chart, top pages/referrers, status breakdown, recent errors, error details, IP ban manager, dashboard shell.
-- **Blade views** — Tailwind utility classes; CSS bar chart for traffic trend (no JS chart libraries).
-- **`routes/dashboard.php`** — registers only when `analytics.dashboard.enabled` **and** `analytics.dashboard.authorization` are both configured.
-- **Dependencies** — `livewire/livewire` ^4.0, `illuminate/auth`, `illuminate/view`, `illuminate/validation`.
+| Area | Deliverable |
+|------|-------------|
+| **README** | Full user guide: status, requirements, installation, quick start, features, commands, privacy, testing, contributing, security, versioning |
+| **CHANGELOG** | Honest **Unreleased** section only; removed placeholder `v0.1.0` entry |
+| **CODE_OF_CONDUCT** | Contributor Covenant 2.1 |
+| **CONTRIBUTING** | Expanded `.github/CONTRIBUTING.md` (setup, verify, tests, docs, PR expectations) |
+| **SECURITY** | Private reporting via GitHub Security Advisories; no fabricated email contact |
+| **Docs** | `INSTALLATION.md`, `CONFIGURATION.md`, `PRIVACY.md`, `ARCHITECTURE.md`, `DASHBOARD.md`, `RELEASES.md` |
+| **Docs index** | Updated `docs/README.md` |
+| **GitHub** | Feature request form, issue template config, enhanced bug report, pull request template |
 
-**Not implemented (by design):** AdminLTE, Bootstrap, React, Vue, Inertia, jQuery; Phase 9+ features.
+Existing accurate docs retained: `VISITOR_IDENTIFICATION.md`, `RETENTION.md`, checklists.
 
----
-
-### Dashboard behaviour
-
-| Feature | Implementation |
-|---------|----------------|
-| Opt-in activation | `dashboard.enabled=true` + non-null `dashboard.authorization` required |
-| Authorization | Gate string (e.g. `viewAnalyticsDashboard`) or invokable class |
-| Date filters | URL-synced `from`/`to` on main dashboard; validated on apply |
-| Pagination | Recent errors and IP bans use configurable `dashboard.pagination.per_page` |
-| IP ban management | Ban/unban via dashboard; reuses `IpBanService` / `IpUnbanService` |
-| Error details | Dedicated route `/analytics/errors/{error}` |
-| Self-tracking | Dashboard paths remain in `analytics.ignored` by default |
+**Not implemented (by design):** Phase 10 CI automation changes, Phase 11 Packagist publication, `analytics:install` command (never existed).
 
 ---
 
-### Enabling the dashboard (host application)
+### Documentation accuracy notes
 
-```php
-// config/analytics.php
-'dashboard' => [
-    'enabled' => true,
-    'authorization' => 'viewAnalyticsDashboard', // or AllowAuthenticatedDashboardAccess::class
-    'middleware' => ['web', 'auth'],
-],
+| Topic | Documented behaviour |
+|-------|---------------------|
+| Defaults | All tracking, banning, dashboard off (`ConfigTest` assertions) |
+| Migrations | Publishable via `analytics-migrations`; not auto-loaded in host apps |
+| Middleware | Auto-attached to `web` when `enabled` + feature toggles |
+| Dashboard | Requires `enabled` + non-null `authorization` |
+| Commands | `analytics:prune`, `analytics:ip-ban`, `analytics:ip-unban`, `analytics:placeholder` |
+| Contracts | `VisitorIdentifier`, `AnalyticsRecorder`, `ErrorRecorder` |
+| CI badge | GitHub Actions `tests.yml` only (real workflow URL) |
 
-// AuthServiceProvider or similar
-Gate::define('viewAnalyticsDashboard', fn ($user) => /* policy */);
-```
-
-Publish views optionally: `php artisan vendor:publish --tag=analytics-views`.
+Privacy disclaimer included in README and `docs/PRIVACY.md`.
 
 ---
 
@@ -61,56 +51,28 @@ Publish views optionally: `php artisan vendor:publish --tag=analytics-views`.
 
 | Action | Path |
 |--------|------|
-| Created | `src/Services/AnalyticsDashboardQuery.php` |
-| Created | `src/Support/DashboardAuthorizer.php`, `DashboardDateRange.php`, `AllowAuthenticatedDashboardAccess.php` |
-| Created | `src/Http/Middleware/AuthorizeAnalyticsDashboard.php` |
-| Created | `src/Livewire/*.php` (9 components) + `Concerns/InteractsWithAnalyticsDashboard.php` |
-| Created | `resources/views/layouts/dashboard.blade.php`, `resources/views/livewire/*.blade.php` |
-| Created | `routes/dashboard.php` |
-| Created | `tests/DashboardTestCase.php`, `DisabledDashboardTestCase.php`, `MissingAuthorizationDashboardTestCase.php` |
-| Created | `tests/Support/DashboardUser.php` |
-| Created | `tests/Dashboard/*.php`, `tests/Unit/DashboardAuthorizerTest.php`, `tests/Database/AnalyticsDashboardQueryTest.php` |
-| Modified | `composer.json` (Livewire + auth/view/validation deps; `@prepare` before analyse in `test` script) |
-| Modified | `config/analytics.php` |
-| Modified | `src/LaravelAnalyticsServiceProvider.php` |
-| Modified | `tests/Pest.php`, `phpunit.xml.dist` |
-| Modified | `CHANGELOG.md`, `docs/IMPLEMENTATION_PLAN.md` |
+| Rewritten | `README.md` |
+| Created | `CODE_OF_CONDUCT.md` |
+| Updated | `CHANGELOG.md` |
+| Updated | `.github/CONTRIBUTING.md`, `.github/SECURITY.md` |
+| Created | `docs/INSTALLATION.md`, `CONFIGURATION.md`, `PRIVACY.md`, `ARCHITECTURE.md`, `DASHBOARD.md`, `RELEASES.md` |
+| Updated | `docs/README.md` |
+| Created | `.github/ISSUE_TEMPLATE/feature_request.yml`, `config.yml` |
+| Updated | `.github/ISSUE_TEMPLATE/bug.yml` |
+| Created | `.github/pull_request_template.md` |
+| Updated | `docs/IMPLEMENTATION_PLAN.md` |
 
 ---
 
-### Tests added
-
-| File | Coverage |
-|------|----------|
-| `tests/Dashboard/DashboardAccessTest.php` | HTTP 403/200, gate denial, error details route |
-| `tests/Dashboard/DashboardLivewireTest.php` | Metrics, filters, IP ban/unban, guest forbidden |
-| `tests/Dashboard/DashboardRouteRegistrationDisabledTest.php` | No routes when disabled |
-| `tests/Dashboard/DashboardRouteRegistrationMissingAuthorizationTest.php` | No routes without authorization |
-| `tests/Unit/DashboardAuthorizerTest.php` | Gate, invokable, default deny |
-| `tests/Database/AnalyticsDashboardQueryTest.php` | Query service metrics and rankings |
-
-**Suite totals after Phase 8:** 146 tests, 321 assertions.
-
----
-
-### Commands run
-
-```powershell
-composer lint
-composer verify
-```
-
----
-
-### Results
+### Validation
 
 | Gate | Result |
 |------|--------|
-| `composer validate --strict` | Passed |
-| PHPStan (level 7) | Passed |
-| Pint | Passed |
-| Pest type coverage | 100% |
-| Pest test suite | **146 passed** (~8126 ms, parallel) |
+| Documentation review | Passed — aligned with config, middleware, routes, commands, and tests |
+| `composer lint:check` | Passed (no PHP source changes in Phase 9) |
+| `composer verify` | Not run locally — broken `vendor/` and stale `composer.lock` from prior session (pre-existing; requires `composer update --lock` + reinstall) |
+
+CI on GitHub remains the authoritative quality gate for merged code.
 
 ---
 
@@ -118,36 +80,36 @@ composer verify
 
 | Item | Status |
 |------|--------|
-| Host must supply auth guard + authorization policy | Documented in config |
-| Dashboard requires Livewire 4 in host app | Composer dependency |
-| Large datasets may need query pagination/index tuning | Acceptable for initial release |
-| Traffic chart is table/CSS-based, not interactive | By design (no JS chart libs) |
+| No tagged release yet | Documented in README and RELEASES.md |
+| Packagist not published | Installation documented as `composer require`; no download badges |
+| Local vendor/lock drift | Maintainer should run `composer update --lock && composer install` before release |
 
-**No blockers prevent Phase 9.**
+**No blockers prevent Phase 10** (CI/repository automation review — workflow already exists; Phase 10 may formalize split workflows per spec).
 
 ---
 
-### Phase 9 readiness
+### Phase 10 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| Dashboard operational when enabled | Ready |
-| All quality gates passing | Ready |
-| Core analytics + retention + IP ban complete | Ready |
+| README and docs complete | Ready |
+| Community files present | Ready |
+| Honest CHANGELOG | Ready |
+| Core features implemented (Phases 1–8) | Ready |
 
-**Phase 9 scope:** OSS / documentation / CI — **not started** (await explicit go-ahead).
+**Phase 10 scope:** GitHub Actions and Dependabot formalization — **not started** (await explicit go-ahead).
 
 ---
 
-## Phase 7 Report (archived summary)
+## Phase 8 Report (archived summary)
 
-Configurable retention pruning via `AnalyticsPruner` and `analytics:prune`. See git history for full details.
+Optional Livewire 4 dashboard with authorization, KPIs, filters, pagination, error details, and IP ban management. **146 tests** passing at phase completion. See git history for full file list.
 
 ---
 
 ## Current state (summary)
 
-Traffic, visitor, error, and IP ban features operational when enabled. Configurable retention pruning via `analytics:prune`. **Optional Livewire dashboard** available when explicitly enabled and authorized.
+Traffic, visitor, error, IP ban, retention, and optional dashboard features are implemented. OSS documentation and community files are complete. Pre-release; no tagged versions.
 
 ---
 
@@ -155,12 +117,12 @@ Traffic, visitor, error, and IP ban features operational when enabled. Configura
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0–7** | Discovery → retention | Complete |
-| **8** | Livewire dashboard | **Complete** |
-| **9–12** | OSS, CI, release, hardening | Pending |
+| **0–8** | Discovery → Livewire dashboard | Complete |
+| **9** | OSS documentation | **Complete** |
+| **10–12** | CI automation, Packagist release, v1 hardening | Pending |
 
 ---
 
 ## Next step
 
-**Phase 9** — await explicit go-ahead. Do not begin without instruction.
+**Phase 10** — await explicit go-ahead. Do not begin without instruction.
