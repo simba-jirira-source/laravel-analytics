@@ -57,7 +57,14 @@ git tag -a v0.5.0 -m "Release v0.5.0"
 git push origin v0.5.0
 ```
 
-6. Create a GitHub Release from the tag; paste relevant changelog notes.
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which:
+
+1. Runs `composer validate --strict`, PHPStan, Pint, type coverage, and Pest on Ubuntu (PHP 8.4, Laravel 13, prefer-stable)
+2. Creates a GitHub Release with generated release notes (only if all gates pass)
+
+Pre-release tags containing `-alpha`, `-beta`, or `-rc` are marked as GitHub pre-releases automatically.
+
+6. The `Update Changelog` workflow (`.github/workflows/update-changelog.yml`) can commit release notes to `CHANGELOG.md` when a GitHub Release is published.
 7. If using Packagist, verify the new tag is indexed (Phase 11).
 8. Smoke-test in a fresh Laravel application:
 

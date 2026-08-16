@@ -24,6 +24,20 @@ composer install
 
 ## Development workflow
 
+### Continuous integration
+
+GitHub Actions runs separate workflows on pull requests and pushes to `main` / `*.x` branches:
+
+| Workflow | File | Purpose |
+|----------|------|---------|
+| **Tests** | `.github/workflows/tests.yml` | Pest suite + type coverage across PHP 8.3–8.5, Laravel 12/13, prefer-lowest/stable, Ubuntu and Windows |
+| **Static Analysis** | `.github/workflows/static-analysis.yml` | PHPStan (level 7) across the same PHP/Laravel/stability matrix on Ubuntu |
+| **Code Style** | `.github/workflows/code-style.yml` | Pint (`composer lint:check`) |
+
+Tagged releases (`v*`) trigger `.github/workflows/release.yml`, which runs the full quality gates before creating a GitHub Release. Packagist publication is not automated from this repository.
+
+Dependabot opens weekly update PRs for Composer and GitHub Actions (see `.github/dependabot.yml`).
+
 ### Run the full verification suite
 
 ```bash

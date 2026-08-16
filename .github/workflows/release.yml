@@ -1,0 +1,73 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    name: Verify release quality gates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          extensions: dom, curl, libxml, mbstring, zip, fileinfo, sqlite, pdo_sqlite, bcmath, intl
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
+        run: |
+          composer require --dev "laravel/framework:13.*" "orchestra/testbench:11.*" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction --no-progress --no-scripts
+          composer run prepare
+
+      - name: Validate Composer metadata
+        run: composer validate --strict
+
+      - name: Run PHPStan
+        run: composer analyse
+
+      - name: Run Pint
+        run: composer lint:check
+
+      - name: Run type coverage
+        run: composer test:types
+
+      - name: Run tests
+        run: composer test:unit
+
+  github-release:
+    needs: quality
+    runs-on: ubuntu-latest
+
+    name: Publish GitHub Release
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@38f0f2355af8424c0be3520e9fc34692e3951507 # v2.4.2
+        with:
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}

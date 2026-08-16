@@ -4,6 +4,8 @@ First-party, self-hosted application analytics for Laravel.
 
 <p align="center">
     <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/tests.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/tests.yml?branch=main&label=Tests&style=flat-square"></a>
+    <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/static-analysis.yml"><img alt="Static Analysis" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/static-analysis.yml?branch=main&label=Static%20Analysis&style=flat-square"></a>
+    <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/code-style.yml"><img alt="Code Style" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/code-style.yml?branch=main&label=Code%20Style&style=flat-square"></a>
 </p>
 
 Track page views, unique visitors, HTTP errors, and optional IP bans from your own database. An optional Livewire 4 dashboard provides KPIs, trends, and management screens when you explicitly enable it.

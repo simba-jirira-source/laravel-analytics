@@ -1,6 +1,6 @@
 # Laravel Analytics — Implementation Plan
 
-> **Status:** Phase 9 complete (OSS documentation). Phase 10 not started.
+> **Status:** Phase 10 complete (GitHub Actions and Dependabot). Phase 11 not started.
 >
 > **Last updated:** 2026-08-16
 >
@@ -8,71 +8,65 @@
 
 ---
 
-## Phase 9 Report
+## Phase 10 Report
 
 ### What was implemented
 
-Phase 9 completed open-source documentation and repository community files. All content reflects the **actual** package implementation; no fabricated releases, statistics, or security contacts were added.
+Phase 10 split CI into focused GitHub Actions workflows and completed Dependabot configuration. No credentials or secrets were added to the repository.
 
-| Area | Deliverable |
-|------|-------------|
-| **README** | Full user guide: status, requirements, installation, quick start, features, commands, privacy, testing, contributing, security, versioning |
-| **CHANGELOG** | Honest **Unreleased** section only; removed placeholder `v0.1.0` entry |
-| **CODE_OF_CONDUCT** | Contributor Covenant 2.1 |
-| **CONTRIBUTING** | Expanded `.github/CONTRIBUTING.md` (setup, verify, tests, docs, PR expectations) |
-| **SECURITY** | Private reporting via GitHub Security Advisories; no fabricated email contact |
-| **Docs** | `INSTALLATION.md`, `CONFIGURATION.md`, `PRIVACY.md`, `ARCHITECTURE.md`, `DASHBOARD.md`, `RELEASES.md` |
-| **Docs index** | Updated `docs/README.md` |
-| **GitHub** | Feature request form, issue template config, enhanced bug report, pull request template |
+| Workflow | File | Trigger | Scope |
+|----------|------|---------|-------|
+| **Tests** | `.github/workflows/tests.yml` | PR, push to `main` / `*.x`, manual | Pest + type coverage; matrix: PHP 8.3–8.5, Laravel 12/13, prefer-lowest/stable, Ubuntu + Windows |
+| **Static Analysis** | `.github/workflows/static-analysis.yml` | PR, push to `main` / `*.x`, manual | PHPStan level 7; same PHP/Laravel/stability matrix on Ubuntu |
+| **Code Style** | `.github/workflows/code-style.yml` | PR, push to `main` / `*.x`, manual | Pint via `composer lint:check` on Ubuntu (PHP 8.4) |
+| **Release** | `.github/workflows/release.yml` | Push tags `v*` only | Full quality gates, then GitHub Release (no Packagist automation) |
+| **Update Changelog** | `.github/workflows/update-changelog.yml` | GitHub Release published | Existing; updates `CHANGELOG.md` on `main` |
 
-Existing accurate docs retained: `VISITOR_IDENTIFICATION.md`, `RETENTION.md`, checklists.
+**Dependabot** (`.github/dependabot.yml`):
 
-**Not implemented (by design):** Phase 10 CI automation changes, Phase 11 Packagist publication, `analytics:install` command (never existed).
+- Weekly Composer and GitHub Actions updates
+- Commit message prefixes (`deps`, `ci`)
+- PR limits and dependency groups (Laravel, Pest, PHPStan)
 
----
+### CI matrix (advertised compatibility)
 
-### Documentation accuracy notes
+Matches `composer.json` constraints and what CI actually runs:
 
-| Topic | Documented behaviour |
-|-------|---------------------|
-| Defaults | All tracking, banning, dashboard off (`ConfigTest` assertions) |
-| Migrations | Publishable via `analytics-migrations`; not auto-loaded in host apps |
-| Middleware | Auto-attached to `web` when `enabled` + feature toggles |
-| Dashboard | Requires `enabled` + non-null `authorization` |
-| Commands | `analytics:prune`, `analytics:ip-ban`, `analytics:ip-unban`, `analytics:placeholder` |
-| Contracts | `VisitorIdentifier`, `AnalyticsRecorder`, `ErrorRecorder` |
-| CI badge | GitHub Actions `tests.yml` only (real workflow URL) |
+| Dimension | Values |
+|-----------|--------|
+| PHP | 8.3, 8.4, 8.5 |
+| Laravel | 12.*, 13.* |
+| Orchestra Testbench | 10.* (L12), 11.* (L13) |
+| Stability | prefer-lowest, prefer-stable |
+| OS | Ubuntu (all workflows); Windows (tests only, non-parallel Pest) |
 
-Privacy disclaimer included in README and `docs/PRIVACY.md`.
+### Release safety
 
----
+- Releases trigger **only** on version tags (`v*`), not on every commit to `main`.
+- `release.yml` runs validate, PHPStan, Pint, type coverage, and Pest before `softprops/action-gh-release` creates the GitHub Release.
+- Pre-release tags (`-alpha`, `-beta`, `-rc`) are marked as GitHub pre-releases.
+- No Packagist API tokens or other secrets in workflow files.
 
 ### Files created or changed
 
 | Action | Path |
 |--------|------|
-| Rewritten | `README.md` |
-| Created | `CODE_OF_CONDUCT.md` |
-| Updated | `CHANGELOG.md` |
-| Updated | `.github/CONTRIBUTING.md`, `.github/SECURITY.md` |
-| Created | `docs/INSTALLATION.md`, `CONFIGURATION.md`, `PRIVACY.md`, `ARCHITECTURE.md`, `DASHBOARD.md`, `RELEASES.md` |
-| Updated | `docs/README.md` |
-| Created | `.github/ISSUE_TEMPLATE/feature_request.yml`, `config.yml` |
-| Updated | `.github/ISSUE_TEMPLATE/bug.yml` |
-| Created | `.github/pull_request_template.md` |
+| Refactored | `.github/workflows/tests.yml` — tests + type coverage only |
+| Created | `.github/workflows/static-analysis.yml` |
+| Created | `.github/workflows/code-style.yml` |
+| Created | `.github/workflows/release.yml` |
+| Updated | `.github/dependabot.yml` |
+| Updated | `README.md` — CI badges for tests, static analysis, code style |
+| Updated | `.github/CONTRIBUTING.md`, `docs/RELEASES.md` |
 | Updated | `docs/IMPLEMENTATION_PLAN.md` |
-
----
 
 ### Validation
 
-| Gate | Result |
-|------|--------|
-| Documentation review | Passed — aligned with config, middleware, routes, commands, and tests |
-| `composer lint:check` | Passed (no PHP source changes in Phase 9) |
-| `composer verify` | Not run locally — broken `vendor/` and stale `composer.lock` from prior session (pre-existing; requires `composer update --lock` + reinstall) |
-
-CI on GitHub remains the authoritative quality gate for merged code.
+| Check | Result |
+|-------|--------|
+| YAML syntax (all workflows + dependabot) | Passed (Python `yaml.safe_load`) |
+| Local `composer verify` | Not run — vendor/lock unavailable locally (pre-existing) |
+| Credentials in workflow files | None |
 
 ---
 
@@ -80,36 +74,36 @@ CI on GitHub remains the authoritative quality gate for merged code.
 
 | Item | Status |
 |------|--------|
-| No tagged release yet | Documented in README and RELEASES.md |
-| Packagist not published | Installation documented as `composer require`; no download badges |
-| Local vendor/lock drift | Maintainer should run `composer update --lock && composer install` before release |
+| Branch protection should require all three CI workflows | Maintainer GitHub setting (documented in RELEASES.md) |
+| Windows Pest runs without `--parallel` | By design; Linux runs parallel suite |
+| Packagist publication | Manual / Phase 11; not automated in release workflow |
 
-**No blockers prevent Phase 10** (CI/repository automation review — workflow already exists; Phase 10 may formalize split workflows per spec).
+**No blockers prevent Phase 11.**
 
 ---
 
-### Phase 10 readiness
+### Phase 11 readiness
 
 | Prerequisite | Status |
 |--------------|--------|
-| README and docs complete | Ready |
-| Community files present | Ready |
-| Honest CHANGELOG | Ready |
-| Core features implemented (Phases 1–8) | Ready |
+| CI workflows split and documented | Ready |
+| Safe tag-based release workflow | Ready |
+| Dependabot configured | Ready |
+| OSS documentation (Phase 9) | Ready |
 
-**Phase 10 scope:** GitHub Actions and Dependabot formalization — **not started** (await explicit go-ahead).
+**Phase 11 scope:** Packagist / release readiness — **not started** (await explicit go-ahead).
 
 ---
 
-## Phase 8 Report (archived summary)
+## Phase 9 Report (archived summary)
 
-Optional Livewire 4 dashboard with authorization, KPIs, filters, pagination, error details, and IP ban management. **146 tests** passing at phase completion. See git history for full file list.
+OSS documentation and community files completed. See git history for full file list.
 
 ---
 
 ## Current state (summary)
 
-Traffic, visitor, error, IP ban, retention, and optional dashboard features are implemented. OSS documentation and community files are complete. Pre-release; no tagged versions.
+Core analytics features implemented (Phases 1–8). OSS documentation complete (Phase 9). CI/CD workflows and Dependabot configured (Phase 10). Pre-release; no tagged versions published via the new release workflow yet.
 
 ---
 
@@ -117,12 +111,12 @@ Traffic, visitor, error, IP ban, retention, and optional dashboard features are 
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| **0–8** | Discovery → Livewire dashboard | Complete |
-| **9** | OSS documentation | **Complete** |
-| **10–12** | CI automation, Packagist release, v1 hardening | Pending |
+| **0–9** | Discovery → OSS documentation | Complete |
+| **10** | GitHub Actions and Dependabot | **Complete** |
+| **11–12** | Packagist release, v1 hardening | Pending |
 
 ---
 
 ## Next step
 
-**Phase 10** — await explicit go-ahead. Do not begin without instruction.
+**Phase 11** — await explicit go-ahead. Do not begin without instruction.
