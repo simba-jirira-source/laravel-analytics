@@ -50,13 +50,13 @@
     },
     "autoload": {
         "psr-4": {
-            "LaravelAnalytics\\LaravelAnalytics\\": "src/",
-            "LaravelAnalytics\\LaravelAnalytics\\Database\\Factories\\": "database/factories/"
+            "SimbaJirira\\LaravelAnalytics\\": "src/",
+            "SimbaJirira\\LaravelAnalytics\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "LaravelAnalytics\\LaravelAnalytics\\Tests\\": "tests/",
+            "SimbaJirira\\LaravelAnalytics\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
@@ -88,10 +88,16 @@
             "vendor/bin/phpstan analyse --memory-limit=512M"
         ],
         "test:types": [
-            "vendor/bin/pest --type-coverage --min=100 --memory-limit=512M"
+            "@php tools/type-coverage.php"
         ],
         "test:unit": [
-            "vendor/bin/pest --parallel"
+            "@php tools/run-pest.php"
+        ],
+        "test:database": [
+            "@php tools/run-pest.php tests/DatabaseIntegration"
+        ],
+        "security:audit": [
+            "composer audit --format=plain --abandoned=ignore"
         ],
         "test": [
             "@prepare",
@@ -102,6 +108,7 @@
         ],
         "verify": [
             "composer validate --strict",
+            "@security:audit",
             "@test"
         ],
         "clear": [
@@ -111,11 +118,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "LaravelAnalytics\\LaravelAnalytics\\LaravelAnalyticsServiceProvider"
-            ],
-            "aliases": {
-                "LaravelAnalytics": "LaravelAnalytics\\LaravelAnalytics\\Facades\\LaravelAnalytics"
-            }
+                "SimbaJirira\\LaravelAnalytics\\AnalyticsServiceProvider"
+            ]
         }
     },
     "config": {

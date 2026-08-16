@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Services;
+namespace SimbaJirira\LaravelAnalytics\Services;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Support\DashboardDateRange;
+use SimbaJirira\LaravelAnalytics\Support\DatabaseSqlHelper;
 use stdClass;
 
 class AnalyticsDashboardQuery
@@ -26,6 +28,35 @@ class AnalyticsDashboardQuery
      * }
      */
     public function overviewMetrics(DashboardDateRange $range): array
+    {
+        $ttl = (int) config('analytics.dashboard.cache_ttl', 0);
+
+        if ($ttl <= 0) {
+            return $this->resolveOverviewMetrics($range);
+        }
+
+        $cacheKey = sprintf(
+            'analytics.dashboard.overview.%s.%s',
+            $range->from->timestamp,
+            $range->to->timestamp,
+        );
+
+        /** @var array{page_views: int, unique_visitors: int, visits: int, errors: int, active_bans: int} $metrics */
+        $metrics = Cache::remember($cacheKey, $ttl, fn (): array => $this->resolveOverviewMetrics($range));
+
+        return $metrics;
+    }
+
+    /**
+     * @return array{
+     *     page_views: int,
+     *     unique_visitors: int,
+     *     visits: int,
+     *     errors: int,
+     *     active_bans: int
+     * }
+     */
+    protected function resolveOverviewMetrics(DashboardDateRange $range): array
     {
         $pageViewsQuery = PageView::query()->whereBetween('viewed_at', [$range->from, $range->to]);
 
@@ -48,8 +79,13 @@ class AnalyticsDashboardQuery
      */
     public function trafficTrend(DashboardDateRange $range): Collection
     {
+        /** @var Connection $connection */
+        $connection = PageView::query()->getConnection();
+        /** @var literal-string $dateExpression */
+        $dateExpression = DatabaseSqlHelper::trafficTrendDateExpression($connection);
+
         return PageView::query()
-            ->selectRaw('DATE(viewed_at) as date, COUNT(*) as total')
+            ->selectRaw("{$dateExpression}, COUNT(*) as total")
             ->whereBetween('viewed_at', [$range->from, $range->to])
             ->groupBy('date')
             ->orderBy('date')
@@ -128,16 +164,11 @@ class AnalyticsDashboardQuery
     {
         /** @var Connection $connection */
         $connection = $query->getConnection();
-        $driver = $connection->getDriverName();
-
-        if ($driver === 'sqlite') {
-            return (int) (clone $query)->toBase()
-                ->selectRaw("COUNT(DISTINCT visitor_hash || '|' || date(viewed_at)) as total")
-                ->value('total');
-        }
+        /** @var literal-string $expression */
+        $expression = DatabaseSqlHelper::distinctVisitorDayCountExpression($connection);
 
         return (int) (clone $query)->toBase()
-            ->selectRaw("COUNT(DISTINCT CONCAT(visitor_hash, '|', DATE(viewed_at))) as total")
+            ->selectRaw($expression)
             ->value('total');
     }
 }

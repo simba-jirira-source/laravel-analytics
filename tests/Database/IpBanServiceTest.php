@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Carbon;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
-use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Services\IpBanService;
+use SimbaJirira\LaravelAnalytics\Services\IpUnbanService;
 
 beforeEach(function () {
     config([

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 it('records supported http exceptions and preserves laravel exception behaviour', function () {

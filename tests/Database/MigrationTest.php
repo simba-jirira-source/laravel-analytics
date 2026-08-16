@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
 
 it('creates analytics tables', function () {
     expect(Schema::hasTable('analytics_visitors'))->toBeTrue()

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Livewire;
+namespace SimbaJirira\LaravelAnalytics\Livewire;
 
 use Illuminate\View\View;
-use LaravelAnalytics\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use SimbaJirira\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
 
 class AnalyticsDashboard extends Component
 {

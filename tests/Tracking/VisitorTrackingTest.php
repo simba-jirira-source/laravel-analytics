@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
-use LaravelAnalytics\LaravelAnalytics\Services\VisitorAnalytics;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Services\VisitorAnalytics;
 
 it('counts a repeat visitor after multiple tracked page views', function () {
     $this->get('/test-page')->assertOk();

@@ -3,15 +3,6 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
-use LaravelAnalytics\LaravelAnalytics\LaravelAnalytics;
-
-it('resolves the singleton', function () {
-    expect(app(LaravelAnalytics::class))->toBeInstanceOf(LaravelAnalytics::class);
-});
-
-it('returns the same instance from the container', function () {
-    expect(app(LaravelAnalytics::class))->toBe(app(LaravelAnalytics::class));
-});
 
 it('merges the package config', function () {
     expect(config('analytics.enabled'))->toBeFalse();
@@ -41,4 +32,8 @@ it('registers publishable migrations', function () {
     ])->assertSuccessful();
 
     expect(database_path('migrations'))->toBeDirectory();
+});
+
+it('does not register a facade alias', function () {
+    expect(config('app.aliases', []))->not->toHaveKey('LaravelAnalytics');
 });

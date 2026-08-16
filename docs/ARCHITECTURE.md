@@ -4,7 +4,7 @@ Laravel Analytics is a Laravel package composed of middleware, services, Eloquen
 
 ## Package boot
 
-1. Composer autoloads `LaravelAnalytics\LaravelAnalytics\LaravelAnalyticsServiceProvider`.
+1. Composer autoloads `SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider`.
 2. The provider merges `config/analytics.php`, registers singleton services, and binds contracts.
 3. On boot it loads routes (`routes/web.php`, `routes/dashboard.php`), views (`analytics` namespace), translations, and Livewire components when Livewire is bound.
 4. Middleware aliases are registered; selected middleware is attached to the `web` group when config enables features.

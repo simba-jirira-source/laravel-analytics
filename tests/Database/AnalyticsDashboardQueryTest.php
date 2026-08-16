@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsDashboardQuery;
+use SimbaJirira\LaravelAnalytics\Support\DashboardDateRange;
 
 beforeEach(function () {
     $this->query = app(AnalyticsDashboardQuery::class);

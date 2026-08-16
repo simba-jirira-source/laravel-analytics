@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
-use LaravelAnalytics\LaravelAnalytics\Services\VisitorAnalytics;
-use LaravelAnalytics\LaravelAnalytics\Services\VisitorService;
-use LaravelAnalytics\LaravelAnalytics\Support\AnalyticsHashSalt;
-use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Services\VisitorAnalytics;
+use SimbaJirira\LaravelAnalytics\Services\VisitorService;
+use SimbaJirira\LaravelAnalytics\Support\AnalyticsHashSalt;
+use SimbaJirira\LaravelAnalytics\Support\DefaultVisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressNormalizer;
 
 beforeEach(function () {
     config([

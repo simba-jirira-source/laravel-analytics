@@ -15,7 +15,7 @@ This guide walks through installing Laravel Analytics into a Laravel 12 or 13 ap
 composer require simba-jirira-source/laravel-analytics
 ```
 
-Laravel discovers `LaravelAnalytics\LaravelAnalytics\LaravelAnalyticsServiceProvider` automatically.
+Laravel discovers `SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider` automatically.
 
 ## 2. Publish configuration
 
@@ -77,7 +77,7 @@ The dashboard requires explicit configuration **and** authorization:
 ],
 ```
 
-Define the gate (or use an invokable class such as `LaravelAnalytics\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess`):
+Define the gate (or use an invokable class such as `SimbaJirira\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess`):
 
 ```php
 use Illuminate\Support\Facades\Gate;

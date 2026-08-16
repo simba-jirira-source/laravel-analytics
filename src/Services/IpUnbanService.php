@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Services;
+namespace SimbaJirira\LaravelAnalytics\Services;
 
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressValidator;
 
 class IpUnbanService
 {

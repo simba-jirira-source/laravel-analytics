@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Database\Factories;
+namespace SimbaJirira\LaravelAnalytics\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
 
 /**
  * @extends Factory<Visitor>

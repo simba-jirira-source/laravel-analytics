@@ -3,23 +3,27 @@
 First-party, self-hosted application analytics for Laravel.
 
 <p align="center">
+    <a href="https://packagist.org/packages/simba-jirira-source/laravel-analytics"><img alt="Latest Version" src="https://img.shields.io/packagist/v/simba-jirira-source/laravel-analytics?style=flat-square"></a>
+    <a href="https://packagist.org/packages/simba-jirira-source/laravel-analytics"><img alt="License" src="https://img.shields.io/packagist/l/simba-jirira-source/laravel-analytics?style=flat-square"></a>
     <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/tests.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/tests.yml?branch=main&label=Tests&style=flat-square"></a>
     <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/static-analysis.yml"><img alt="Static Analysis" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/static-analysis.yml?branch=main&label=Static%20Analysis&style=flat-square"></a>
     <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/code-style.yml"><img alt="Code Style" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/code-style.yml?branch=main&label=Code%20Style&style=flat-square"></a>
+    <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/database.yml"><img alt="Database" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/database.yml?branch=main&label=Database&style=flat-square"></a>
+    <a href="https://github.com/simba-jirira-source/laravel-analytics/actions/workflows/security.yml"><img alt="Security" src="https://img.shields.io/github/actions/workflow/status/simba-jirira-source/laravel-analytics/security.yml?branch=main&label=Security&style=flat-square"></a>
 </p>
 
 Track page views, unique visitors, HTTP errors, and optional IP bans from your own database. An optional Livewire 4 dashboard provides KPIs, trends, and management screens when you explicitly enable it.
 
 ## Status
 
-Pre-release development. Core analytics features (traffic, visitors, errors, IP banning, retention pruning, and an optional dashboard) are implemented in this repository. No stable Packagist release has been tagged yet.
+Pre-1.0 development. Latest release: **v0.5.0** on [Packagist](https://packagist.org/packages/simba-jirira-source/laravel-analytics) and [GitHub Releases](https://github.com/simba-jirira-source/laravel-analytics/releases). The `0.6.0` foundation release (namespace cleanup, database CI, performance hardening) is prepared on `main` and awaits maintainer tagging.
 
 ## Requirements
 
 - PHP 8.3+
 - Laravel 12 or 13
 
-These match the `composer.json` constraints. CI tests PHP 8.3–8.5 against Laravel 12 and 13 on Ubuntu and Windows.
+These match the `composer.json` constraints. CI tests PHP 8.3–8.5 against Laravel 12 and 13 on Ubuntu and Windows, with focused SQLite/MySQL/PostgreSQL integration coverage on Ubuntu.
 
 ## Installation
 
@@ -143,9 +147,11 @@ All settings live in `config/analytics.php`. See [docs/CONFIGURATION.md](docs/CO
 
 Extension points (contracts):
 
-- `LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier`
-- `LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder`
-- `LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder`
+- `SimbaJirira\LaravelAnalytics\Contracts\VisitorIdentifier`
+- `SimbaJirira\LaravelAnalytics\Contracts\AnalyticsRecorder`
+- `SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder`
+
+Public integration uses Laravel contracts, config keys, middleware aliases, and Artisan commands. There is no facade in `0.6.0`; a first-party event API is planned for `0.7.0`.
 
 ## Testing
 
@@ -158,9 +164,12 @@ Individual gates:
 
 ```bash
 composer test          # prepare, PHPStan, Pint, type coverage, Pest
+composer test:types    # Pest type coverage (skipped automatically on Windows)
 composer analyse       # PHPStan (level 7)
 composer lint:check    # Pint
-composer test:unit     # Pest
+composer test:unit     # Pest (sequential on Windows, parallel elsewhere)
+composer test:database # cross-database integration tests
+composer security:audit         # Composer security audit
 ```
 
 ## Static analysis

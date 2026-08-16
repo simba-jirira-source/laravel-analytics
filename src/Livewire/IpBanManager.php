@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Livewire;
+namespace SimbaJirira\LaravelAnalytics\Livewire;
 
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use InvalidArgumentException;
-use LaravelAnalytics\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
-use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
-use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
 use Livewire\Component;
 use Livewire\WithPagination;
+use SimbaJirira\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsDashboardQuery;
+use SimbaJirira\LaravelAnalytics\Services\IpBanService;
+use SimbaJirira\LaravelAnalytics\Services\IpUnbanService;
 
 class IpBanManager extends Component
 {

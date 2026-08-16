@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Models;
+namespace SimbaJirira\LaravelAnalytics\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use LaravelAnalytics\LaravelAnalytics\Database\Factories\PageViewFactory;
+use SimbaJirira\LaravelAnalytics\Database\Factories\PageViewFactory;
 
 class PageView extends Model
 {

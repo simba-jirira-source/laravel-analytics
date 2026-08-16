@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Models;
+namespace SimbaJirira\LaravelAnalytics\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use LaravelAnalytics\LaravelAnalytics\Database\Factories\VisitorFactory;
+use SimbaJirira\LaravelAnalytics\Database\Factories\VisitorFactory;
 
 /**
  * @property int $id

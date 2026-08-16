@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Console\Commands;
+namespace SimbaJirira\LaravelAnalytics\Console\Commands;
 
 use Illuminate\Console\Command;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsPruner;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsPruner;
 
 class AnalyticsPruneCommand extends Command
 {

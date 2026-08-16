@@ -37,9 +37,9 @@ Local `composer verify` could not complete on Windows due to intermittent vendor
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| Primary namespace | Pass | `LaravelAnalytics\LaravelAnalytics\` → `src/` |
-| Factories namespace | Pass | `LaravelAnalytics\LaravelAnalytics\Database\Factories\` → `database/factories/` |
-| Test namespace | Pass | `LaravelAnalytics\LaravelAnalytics\Tests\` → `tests/` |
+| Primary namespace | Pass | `SimbaJirira\LaravelAnalytics\` → `src/` |
+| Factories namespace | Pass | `SimbaJirira\LaravelAnalytics\Database\Factories\` → `database/factories/` |
+| Test namespace | Pass | `SimbaJirira\LaravelAnalytics\Tests\` → `tests/` |
 | Service provider autoload | Pass | `LaravelAnalyticsServiceProvider` resolves via autoload |
 | Facade class autoload | Pass | `LaravelAnalytics` facade class resolves |
 
@@ -51,8 +51,8 @@ From `composer.json` → `extra.laravel`:
 
 | Item | Value |
 |------|-------|
-| Provider | `LaravelAnalytics\LaravelAnalytics\LaravelAnalyticsServiceProvider` |
-| Alias | `LaravelAnalytics` → `LaravelAnalytics\LaravelAnalytics\Facades\LaravelAnalytics` |
+| Provider | `SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider` |
+| Alias | `LaravelAnalytics` → `SimbaJirira\LaravelAnalytics\Facades\LaravelAnalytics` |
 
 Verified after simulated install: provider class loads successfully.
 

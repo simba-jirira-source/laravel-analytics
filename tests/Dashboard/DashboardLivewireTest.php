@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use LaravelAnalytics\LaravelAnalytics\Livewire\AnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Livewire\ErrorDetails;
-use LaravelAnalytics\LaravelAnalytics\Livewire\IpBanManager;
-use LaravelAnalytics\LaravelAnalytics\Livewire\RecentErrors;
-use LaravelAnalytics\LaravelAnalytics\Livewire\TrafficOverview;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Tests\Support\DashboardUser;
 use Livewire\Livewire;
+use SimbaJirira\LaravelAnalytics\Livewire\AnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Livewire\ErrorDetails;
+use SimbaJirira\LaravelAnalytics\Livewire\IpBanManager;
+use SimbaJirira\LaravelAnalytics\Livewire\RecentErrors;
+use SimbaJirira\LaravelAnalytics\Livewire\TrafficOverview;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Tests\Support\DashboardUser;
 
 it('renders dashboard overview metrics', function () {
     PageView::factory()->create([

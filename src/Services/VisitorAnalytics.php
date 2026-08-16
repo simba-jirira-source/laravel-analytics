@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Services;
+namespace SimbaJirira\LaravelAnalytics\Services;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use LaravelAnalytics\LaravelAnalytics\Models\Visitor;
+use SimbaJirira\LaravelAnalytics\Models\Visitor;
 
 class VisitorAnalytics
 {

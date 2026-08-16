@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Gate;
-use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Models\AnalyticsError;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
 
 it('forbids guest access to the dashboard', function () {
     $this->get('/analytics')->assertForbidden();

@@ -4,7 +4,7 @@
 >
 > **Last updated:** 2026-08-16
 >
-> **Package:** `simba-jirira-source/laravel-analytics` · **Namespace:** `LaravelAnalytics\LaravelAnalytics`
+> **Package:** `simba-jirira-source/laravel-analytics` · **Namespace:** `SimbaJirira\LaravelAnalytics`
 
 ---
 

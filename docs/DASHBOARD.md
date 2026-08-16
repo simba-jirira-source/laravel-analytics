@@ -43,7 +43,7 @@ Gate::define('viewAnalyticsDashboard', fn ($user) => $user?->is_admin ?? false);
 Or an invokable class:
 
 ```php
-'use LaravelAnalytics\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess;
+'use SimbaJirira\LaravelAnalytics\Support\AllowAuthenticatedDashboardAccess;
 
 'dashboard' => [
     'authorization' => AllowAuthenticatedDashboardAccess::class,

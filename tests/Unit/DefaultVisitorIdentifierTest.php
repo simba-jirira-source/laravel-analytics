@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Support\AnalyticsHashSalt;
-use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
+use SimbaJirira\LaravelAnalytics\Support\AnalyticsHashSalt;
+use SimbaJirira\LaravelAnalytics\Support\DefaultVisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressNormalizer;
 
 beforeEach(function () {
     config([

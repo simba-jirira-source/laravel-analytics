@@ -2,19 +2,22 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Tests\DashboardTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\DatabaseTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\DisabledDashboardTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\ErrorTrackingTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\IpBanningTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\MissingAuthorizationDashboardTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\RetentionTestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\TestCase;
-use LaravelAnalytics\LaravelAnalytics\Tests\TrackingTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\DashboardTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\DatabaseIntegrationTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\DatabaseTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\DisabledDashboardTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\ErrorTrackingTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\IpBanningTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\MissingAuthorizationDashboardTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\RetentionTestCase;
+use SimbaJirira\LaravelAnalytics\Tests\TestCase;
+use SimbaJirira\LaravelAnalytics\Tests\TrackingTestCase;
 
 uses(TestCase::class)->in('Feature', 'Unit');
 
 uses(DatabaseTestCase::class)->in('Database');
+
+uses(DatabaseIntegrationTestCase::class)->in('DatabaseIntegration');
 
 uses(TrackingTestCase::class)->in('Tracking');
 

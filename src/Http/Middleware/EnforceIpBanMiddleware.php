@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Http\Middleware;
+namespace SimbaJirira\LaravelAnalytics\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
-use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressNormalizer;
+use SimbaJirira\LaravelAnalytics\Support\IpAddressValidator;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnforceIpBanMiddleware

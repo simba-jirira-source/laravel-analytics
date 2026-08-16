@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Livewire;
+namespace SimbaJirira\LaravelAnalytics\Livewire;
 
 use Illuminate\View\View;
-use LaravelAnalytics\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
-use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
 use Livewire\Component;
 use Livewire\WithPagination;
+use SimbaJirira\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsDashboardQuery;
+use SimbaJirira\LaravelAnalytics\Support\DashboardDateRange;
 
 class RecentErrors extends Component
 {

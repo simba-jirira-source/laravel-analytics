@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Services;
+namespace SimbaJirira\LaravelAnalytics\Services;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
-use LaravelAnalytics\LaravelAnalytics\Models\PageView;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Contracts\AnalyticsRecorder;
+use SimbaJirira\LaravelAnalytics\Models\PageView;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
 use Symfony\Component\HttpFoundation\Response;
 
 class PageViewRecorder implements AnalyticsRecorder

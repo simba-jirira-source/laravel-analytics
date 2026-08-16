@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
-use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
-use LaravelAnalytics\LaravelAnalytics\Services\IpUnbanService;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Services\IpBanService;
+use SimbaJirira\LaravelAnalytics\Services\IpUnbanService;
 
 it('blocks requests from banned ipv4 addresses', function () {
     IpBan::factory()->create(['ip_address' => '203.0.113.10']);

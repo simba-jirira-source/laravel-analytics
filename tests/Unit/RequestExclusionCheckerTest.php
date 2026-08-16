@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
+use SimbaJirira\LaravelAnalytics\Support\RequestExclusionChecker;
 
 beforeEach(function () {
     config([

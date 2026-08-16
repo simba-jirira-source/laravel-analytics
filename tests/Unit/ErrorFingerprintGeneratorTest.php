@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
-use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
+use SimbaJirira\LaravelAnalytics\Support\ErrorFingerprintGenerator;
+use SimbaJirira\LaravelAnalytics\Support\SensitiveMessageRedactor;
 
 beforeEach(function () {
     $this->generator = new ErrorFingerprintGenerator(new SensitiveMessageRedactor);

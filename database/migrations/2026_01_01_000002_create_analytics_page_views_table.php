@@ -30,6 +30,7 @@ return new class extends Migration
             $table->index('path');
             $table->index('route_name');
             $table->index('status_code');
+            $table->index(['viewed_at', 'visitor_hash']);
             $table->index(['viewed_at', 'path']);
         });
     }

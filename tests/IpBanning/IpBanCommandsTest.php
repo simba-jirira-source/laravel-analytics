@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
-use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
+use SimbaJirira\LaravelAnalytics\Models\IpBan;
 
 it('bans an ip address from the cli', function () {
     $exitCode = Artisan::call('analytics:ip-ban', [

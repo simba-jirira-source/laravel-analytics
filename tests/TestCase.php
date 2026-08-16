@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace LaravelAnalytics\LaravelAnalytics\Tests;
+namespace SimbaJirira\LaravelAnalytics\Tests;
 
-use LaravelAnalytics\LaravelAnalytics\LaravelAnalyticsServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use SimbaJirira\LaravelAnalytics\AnalyticsServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
     protected function getPackageProviders($app): array
     {
         return [
-            LaravelAnalyticsServiceProvider::class,
+            AnalyticsServiceProvider::class,
         ];
     }
 }

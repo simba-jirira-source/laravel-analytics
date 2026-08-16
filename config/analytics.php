@@ -1,9 +1,9 @@
 <?php
 
 declare(strict_types=1);
-use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
-use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
-use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
+use SimbaJirira\LaravelAnalytics\Services\AnalyticsErrorRecorder;
+use SimbaJirira\LaravelAnalytics\Services\PageViewRecorder;
+use SimbaJirira\LaravelAnalytics\Support\DefaultVisitorIdentifier;
 
 return [
 
@@ -44,6 +44,12 @@ return [
         'pagination' => [
             'per_page' => 25,
         ],
+
+        /*
+        | Cache dashboard aggregate queries for this many seconds. Set to 0 to
+        | disable caching (default).
+        */
+        'cache_ttl' => 0,
 
     ],
 
@@ -114,7 +120,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Replace the default visitor identifier by binding a custom class that
-    | implements LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier.
+    | implements SimbaJirira\LaravelAnalytics\Contracts\VisitorIdentifier.
     |
     */
 
@@ -126,7 +132,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Replace the default traffic recorder by binding a custom class that
-    | implements LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder.
+    | implements SimbaJirira\LaravelAnalytics\Contracts\AnalyticsRecorder.
     |
     */
 
@@ -138,7 +144,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Replace the default error recorder by binding a custom class that
-    | implements LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder.
+    | implements SimbaJirira\LaravelAnalytics\Contracts\ErrorRecorder.
     |
     */
 
@@ -184,6 +190,11 @@ return [
         'prune_errors' => true,
 
         'prune_ip_bans' => true,
+
+        /*
+        | Maximum rows deleted per batch during retention pruning.
+        */
+        'chunk_size' => 1000,
 
     ],
 
