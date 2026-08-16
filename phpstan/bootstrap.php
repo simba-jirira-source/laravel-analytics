@@ -29,6 +29,6 @@ try {
     }
 
     $finder->addNamespace('analytics', $viewPath);
-} catch (\Throwable) {
+} catch (Throwable) {
     //
 }
