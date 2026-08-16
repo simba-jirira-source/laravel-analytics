@@ -7,8 +7,19 @@ namespace LaravelAnalytics\LaravelAnalytics\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use LaravelAnalytics\LaravelAnalytics\Database\Factories\VisitorFactory;
 
+/**
+ * @property int $id
+ * @property string $visitor_hash
+ * @property Carbon $first_seen_at
+ * @property Carbon $last_seen_at
+ * @property int|null $user_id
+ * @property string|null $ip_address
+ * @property string|null $ip_hash
+ * @property string|null $user_agent
+ */
 class Visitor extends Model
 {
     /** @use HasFactory<VisitorFactory> */

@@ -53,7 +53,9 @@ jobs:
           composer run prepare
 
       - name: PHPStan
-        run: composer analyse
+        run: |
+          composer run prepare
+          composer analyse
 
       - name: Linter
         run: composer lint:check

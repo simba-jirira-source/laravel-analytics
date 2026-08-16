@@ -6,8 +6,24 @@ namespace LaravelAnalytics\LaravelAnalytics\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use LaravelAnalytics\LaravelAnalytics\Database\Factories\AnalyticsErrorFactory;
 
+/**
+ * @property int $id
+ * @property string $fingerprint
+ * @property string $exception_class
+ * @property string $message
+ * @property string|null $route_name
+ * @property string|null $path
+ * @property string|null $method
+ * @property int|null $status_code
+ * @property string|null $file
+ * @property int|null $line
+ * @property Carbon $first_occurred_at
+ * @property Carbon $last_occurred_at
+ * @property int $occurrence_count
+ */
 class AnalyticsError extends Model
 {
     /** @use HasFactory<AnalyticsErrorFactory> */
