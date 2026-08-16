@@ -12,6 +12,10 @@ use Throwable;
 
 class SafeExceptionMetadataExtractor
 {
+    public function __construct(
+        protected SensitiveMessageRedactor $messageRedactor,
+    ) {}
+
     /**
      * @return array{
      *     exception_class: class-string,
@@ -40,13 +44,7 @@ class SafeExceptionMetadataExtractor
 
     protected function sanitizeMessage(string $message): string
     {
-        $redacted = preg_replace(
-            '/\b(password|token|secret|authorization|api_key|bearer|cookie|session)\s*[:=]\s*\S+/i',
-            '$1=[redacted]',
-            $message,
-        );
-
-        return Str::limit(trim($redacted ?? $message), 1000, '...');
+        return Str::limit($this->messageRedactor->redact($message), 1000, '...');
     }
 
     protected function resolvePath(Request $request): string

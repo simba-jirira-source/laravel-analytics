@@ -30,8 +30,30 @@ it('returns overview metrics for the selected range', function () {
     $metrics = $this->query->overviewMetrics($this->range);
 
     expect($metrics['page_views'])->toBe(2)
+        ->and($metrics['unique_visitors'])->toBe(1)
+        ->and($metrics['visits'])->toBe(1)
         ->and($metrics['errors'])->toBe(1)
         ->and($metrics['active_bans'])->toBe(1);
+});
+
+it('counts visits as distinct visitor days', function () {
+    $visitor = Visitor::factory()->create();
+
+    PageView::factory()->create([
+        'visitor_id' => $visitor->id,
+        'visitor_hash' => $visitor->visitor_hash,
+        'viewed_at' => now()->subDays(2),
+    ]);
+    PageView::factory()->create([
+        'visitor_id' => $visitor->id,
+        'visitor_hash' => $visitor->visitor_hash,
+        'viewed_at' => now()->subDay(),
+    ]);
+
+    $metrics = $this->query->overviewMetrics($this->range);
+
+    expect($metrics['unique_visitors'])->toBe(1)
+        ->and($metrics['visits'])->toBe(2);
 });
 
 it('returns ranked pages and referrers', function () {

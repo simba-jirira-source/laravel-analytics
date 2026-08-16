@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use LaravelAnalytics\LaravelAnalytics\LaravelAnalytics;
 
 it('resolves the singleton', function () {
@@ -16,18 +17,12 @@ it('merges the package config', function () {
     expect(config('analytics.enabled'))->toBeFalse();
 });
 
-it('loads the package translations', function () {
-    expect(trans('analytics::messages.placeholder'))->toBe('Laravel Analytics placeholder translation.');
-});
-
-it('loads the package views', function () {
-    expect(view()->exists('analytics::placeholder'))->toBeTrue();
-});
-
-it('registers the artisan command', function () {
-    $this->artisan('analytics:placeholder')
-        ->expectsOutputToContain('Laravel Analytics placeholder command executed.')
-        ->assertSuccessful();
+it('registers analytics artisan commands', function () {
+    expect(Artisan::all())->toHaveKeys([
+        'analytics:prune',
+        'analytics:ip-ban',
+        'analytics:ip-unban',
+    ]);
 });
 
 it('registers publishable configuration', function () {

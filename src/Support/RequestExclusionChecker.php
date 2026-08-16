@@ -34,14 +34,50 @@ class RequestExclusionChecker
             return true;
         }
 
-        if ($this->isIgnoredPath($request->path())) {
+        if ($this->matchesIpBanBypassPath($request->path())) {
             return true;
         }
 
         $routeName = $request->route()?->getName();
 
-        if ($routeName !== null && $this->isIgnoredRouteName($routeName)) {
+        if ($routeName !== null && $this->matchesIpBanBypassRouteName($routeName)) {
             return true;
+        }
+
+        return false;
+    }
+
+    protected function matchesIpBanBypassPath(string $path): bool
+    {
+        $normalizedPath = trim($path, '/') ?: '';
+
+        /** @var list<string> $patterns */
+        $patterns = config('analytics.ip_banning.bypass_paths', []);
+
+        foreach ($patterns as $pattern) {
+            $normalizedPattern = trim($pattern, '/');
+
+            if ($normalizedPattern === $normalizedPath) {
+                return true;
+            }
+
+            if (Str::is($normalizedPattern, $normalizedPath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function matchesIpBanBypassRouteName(string $routeName): bool
+    {
+        /** @var list<string> $patterns */
+        $patterns = config('analytics.ip_banning.bypass_route_names', []);
+
+        foreach ($patterns as $pattern) {
+            if (Str::is($pattern, $routeName)) {
+                return true;
+            }
         }
 
         return false;

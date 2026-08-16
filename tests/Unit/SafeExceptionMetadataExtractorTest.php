@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {
-    $this->extractor = new SafeExceptionMetadataExtractor;
+    $this->extractor = new SafeExceptionMetadataExtractor(new SensitiveMessageRedactor);
 });
 
 it('extracts safe exception metadata from requests', function () {

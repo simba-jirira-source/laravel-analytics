@@ -9,7 +9,6 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpBanCommand;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsIpUnbanCommand;
-use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPlaceholderCommand;
 use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPruneCommand;
 use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
@@ -43,6 +42,7 @@ use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
 use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
 use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
 use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
 use Livewire\Component;
 use Livewire\Livewire;
 
@@ -61,6 +61,7 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $this->app->singleton(AnalyticsHashSalt::class);
         $this->app->singleton(IpAddressNormalizer::class);
         $this->app->singleton(IpAddressValidator::class);
+        $this->app->singleton(SensitiveMessageRedactor::class);
         $this->app->singleton(ErrorFingerprintGenerator::class);
         $this->app->singleton(SafeExceptionMetadataExtractor::class);
 
@@ -86,7 +87,11 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $this->app->singleton(IpBanService::class);
         $this->app->singleton(IpUnbanService::class);
 
-        $this->app->alias(PageViewRecorder::class, AnalyticsRecorder::class);
+        $this->app->singleton(AnalyticsRecorder::class, function (Application $app): AnalyticsRecorder {
+            $class = config('analytics.analytics_recorder', PageViewRecorder::class);
+
+            return $app->make($class);
+        });
     }
 
     /**
@@ -129,7 +134,6 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         ], ['analytics', 'analytics-migrations']);
 
         $this->commands([
-            AnalyticsPlaceholderCommand::class,
             AnalyticsIpBanCommand::class,
             AnalyticsIpUnbanCommand::class,
             AnalyticsPruneCommand::class,

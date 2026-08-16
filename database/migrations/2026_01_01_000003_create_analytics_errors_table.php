@@ -26,7 +26,7 @@ return new class extends Migration
             $table->unsignedInteger('occurrence_count')->default(1);
             $table->timestamps();
 
-            $table->index('fingerprint');
+            $table->unique('fingerprint');
             $table->index('last_occurred_at');
             $table->index('exception_class');
             $table->index(['fingerprint', 'last_occurred_at']);

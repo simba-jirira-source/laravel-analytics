@@ -46,9 +46,20 @@ class EnforceIpBanMiddleware
         }
 
         if (IpBan::findActiveForIp($normalizedIp) !== null) {
-            return response('', (int) config('analytics.ip_banning.blocked_status', 403));
+            return response('', $this->resolveBlockedStatus());
         }
 
         return $next($request);
+    }
+
+    protected function resolveBlockedStatus(): int
+    {
+        $status = (int) config('analytics.ip_banning.blocked_status', 403);
+
+        if ($status < 400 || $status > 599) {
+            return 403;
+        }
+
+        return $status;
     }
 }

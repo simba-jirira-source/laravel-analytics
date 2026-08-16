@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
+use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
 use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
 
 return [
@@ -44,8 +45,6 @@ return [
             'per_page' => 25,
         ],
 
-        'cache_ttl' => 300,
-
     ],
 
     /*
@@ -74,19 +73,15 @@ return [
 
         'blocked_status' => 403,
 
+        /*
+        | Paths and route names that remain reachable for banned IPs. Leave
+        | empty to enforce bans across the entire application.
+        */
+        'bypass_paths' => [],
+
+        'bypass_route_names' => [],
+
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Trusted Proxies
-    |--------------------------------------------------------------------------
-    |
-    | When null, the package relies on the host application's trusted proxy
-    | configuration when resolving client IP addresses.
-    |
-    */
-
-    'trusted_proxies' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -127,6 +122,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Analytics Recorder
+    |--------------------------------------------------------------------------
+    |
+    | Replace the default traffic recorder by binding a custom class that
+    | implements LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder.
+    |
+    */
+
+    'analytics_recorder' => PageViewRecorder::class,
+
+    /*
+    |--------------------------------------------------------------------------
     | Error Recorder
     |--------------------------------------------------------------------------
     |
@@ -136,24 +143,6 @@ return [
     */
 
     'error_recorder' => AnalyticsErrorRecorder::class,
-
-    /*
-    |--------------------------------------------------------------------------
-    | User Association
-    |--------------------------------------------------------------------------
-    |
-    | Optional association with an authenticated user model. The package does
-    | not assume a specific User model or foreign key constraint.
-    |
-    */
-
-    'user' => [
-
-        'model' => null,
-
-        'foreign_key' => 'user_id',
-
-    ],
 
     /*
     |--------------------------------------------------------------------------

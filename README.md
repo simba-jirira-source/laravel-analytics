@@ -118,7 +118,6 @@ Visit `/analytics` (or your configured `dashboard.path`) when the dashboard is e
 | `analytics:prune` | Remove records older than the configured retention window |
 | `analytics:ip-ban {ip}` | Ban an exact IPv4 or IPv6 address |
 | `analytics:ip-unban {ip}` | Remove an active ban |
-| `analytics:placeholder` | Skeleton command (development placeholder) |
 
 Pruning is not scheduled automatically. See [docs/RETENTION.md](docs/RETENTION.md).
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LaravelAnalytics\LaravelAnalytics\Livewire;
 
 use Illuminate\View\View;
+use LaravelAnalytics\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
 use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
 use Livewire\Component;
@@ -12,6 +13,7 @@ use Livewire\WithPagination;
 
 class RecentErrors extends Component
 {
+    use InteractsWithAnalyticsDashboard;
     use WithPagination;
 
     public string $from = '';
@@ -30,7 +32,7 @@ class RecentErrors extends Component
             $this->to !== '' ? $this->to : null,
         );
 
-        $perPage = max(1, (int) config('analytics.dashboard.pagination.per_page', 25));
+        $perPage = $this->perPage();
 
         return view('analytics::livewire.recent-errors', [
             'errors' => app(AnalyticsDashboardQuery::class)

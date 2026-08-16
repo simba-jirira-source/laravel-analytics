@@ -97,7 +97,7 @@ it('records a sane request duration', function () {
 });
 
 it('collects referrer metadata when enabled', function () {
-    $this->withHeaders(['Referer' => 'https://example.com/previous-page'])
+    $this->withHeaders(['Referer' => 'https://example.com/previous-page?token=secret'])
         ->get('/test-page')
         ->assertOk();
 
@@ -105,6 +105,14 @@ it('collects referrer metadata when enabled', function () {
 
     expect($pageView?->referrer_host)->toBe('example.com')
         ->and($pageView?->referrer_url)->toBe('https://example.com/previous-page');
+});
+
+it('strips query strings from stored referrer urls', function () {
+    $this->withHeaders(['Referer' => 'https://example.com/path?session=abc123'])
+        ->get('/test-page')
+        ->assertOk();
+
+    expect(PageView::query()->first()?->referrer_url)->toBe('https://example.com/path');
 });
 
 it('does not persist request body or sensitive payload fields', function () {

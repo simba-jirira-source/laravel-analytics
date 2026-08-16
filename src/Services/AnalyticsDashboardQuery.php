@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelAnalytics\LaravelAnalytics\Services;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,7 @@ class AnalyticsDashboardQuery
                 ->whereBetween('viewed_at', [$range->from, $range->to])
                 ->distinct('visitor_hash')
                 ->count('visitor_hash'),
-            'visits' => (clone $pageViewsQuery)->distinct('visitor_hash')->count('visitor_hash'),
+            'visits' => $this->distinctVisitorDayCount(clone $pageViewsQuery),
             'errors' => AnalyticsError::query()
                 ->whereBetween('last_occurred_at', [$range->from, $range->to])
                 ->count(),
@@ -118,5 +119,25 @@ class AnalyticsDashboardQuery
     public function ipBansQuery(): Builder
     {
         return IpBan::query()->orderByDesc('banned_at');
+    }
+
+    /**
+     * @param  Builder<PageView>  $query
+     */
+    protected function distinctVisitorDayCount(Builder $query): int
+    {
+        /** @var Connection $connection */
+        $connection = $query->getConnection();
+        $driver = $connection->getDriverName();
+
+        if ($driver === 'sqlite') {
+            return (int) (clone $query)->toBase()
+                ->selectRaw("COUNT(DISTINCT visitor_hash || '|' || date(viewed_at)) as total")
+                ->value('total');
+        }
+
+        return (int) (clone $query)->toBase()
+            ->selectRaw("COUNT(DISTINCT CONCAT(visitor_hash, '|', DATE(viewed_at))) as total")
+            ->value('total');
     }
 }

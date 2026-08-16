@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->timestamps();
 
-            $table->index('visitor_hash');
+            $table->unique('visitor_hash');
             $table->index('last_seen_at');
             $table->index('first_seen_at');
             $table->index('user_id');

@@ -24,7 +24,6 @@ Environment variables are not required; application config is the primary interf
 | `dashboard.middleware` | `['web', 'auth']` | Middleware stack before package authorization |
 | `dashboard.authorization` | `null` | Gate name or invokable class; routes stay disabled when null |
 | `dashboard.pagination.per_page` | `25` | Pagination size for list widgets |
-| `dashboard.cache_ttl` | `300` | Cache TTL (seconds) for aggregate dashboard queries |
 
 Routes register only when `dashboard.enabled` is true **and** `dashboard.authorization` is set.
 
@@ -58,11 +57,15 @@ Middleware aliases registered by the service provider:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `ip_banning.enabled` | `false` | Prepend ban enforcement middleware to the `web` group |
-| `ip_banning.blocked_status` | `403` | HTTP status returned for banned clients |
+| `ip_banning.blocked_status` | `403` | HTTP status returned for banned clients (400–599; invalid values fall back to 403) |
+| `ip_banning.bypass_paths` | `[]` | Paths still reachable for banned IPs (empty = enforce everywhere) |
+| `ip_banning.bypass_route_names` | `[]` | Named routes still reachable for banned IPs |
 
 Requires `enabled` => true.
 
 Only **exact** IPv4 or IPv6 addresses are supported (no CIDR ranges in v1).
+
+Banned clients are blocked from all routes by default, including the analytics dashboard. Add paths to `bypass_paths` only when you intentionally need recovery access from banned networks.
 
 CLI:
 
@@ -70,12 +73,6 @@ CLI:
 php artisan analytics:ip-ban 203.0.113.10 --reason="Abuse" --days=7
 php artisan analytics:ip-unban 203.0.113.10
 ```
-
-## Trusted proxies
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `trusted_proxies` | `null` | When null, client IP resolution relies on the host application's trusted proxy configuration |
 
 ## Privacy
 
@@ -85,7 +82,7 @@ php artisan analytics:ip-unban 203.0.113.10
 | `privacy.hash_ips` | `true` | Persist hashed IP column when applicable |
 | `privacy.hash_salt` | `null` | Salt source; falls back to `app.key` |
 | `privacy.track_authenticated_users` | `false` | Include authenticated user ID in visitor hash and page views |
-| `privacy.collect_referrer` | `true` | Store referrer host and URL on page views |
+| `privacy.collect_referrer` | `true` | Store referrer host and URL (query strings stripped) on page views |
 | `privacy.collect_user_agent` | `true` | Include user agent in visitor identification |
 
 See [PRIVACY.md](PRIVACY.md) and [VISITOR_IDENTIFICATION.md](VISITOR_IDENTIFICATION.md).
@@ -96,20 +93,17 @@ See [PRIVACY.md](PRIVACY.md) and [VISITOR_IDENTIFICATION.md](VISITOR_IDENTIFICAT
 |-----|---------|-------------|
 | `visitor_identifier` | `DefaultVisitorIdentifier::class` | Class implementing `VisitorIdentifier` |
 
+## Analytics recorder
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `analytics_recorder` | `PageViewRecorder::class` | Class implementing `AnalyticsRecorder` |
+
 ## Error recorder
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `error_recorder` | `AnalyticsErrorRecorder::class` | Class implementing `ErrorRecorder` |
-
-## User association
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `user.model` | `null` | Optional Eloquent model class (not enforced by the package) |
-| `user.foreign_key` | `user_id` | Column name on page views when user tracking is enabled |
-
-The package does not assume a specific `User` model.
 
 ## Ignored requests
 

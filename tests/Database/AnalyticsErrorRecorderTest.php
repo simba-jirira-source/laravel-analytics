@@ -10,6 +10,7 @@ use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
 use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
 use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
 
 beforeEach(function () {
     config([
@@ -17,10 +18,12 @@ beforeEach(function () {
         'analytics.tracking.errors' => true,
     ]);
 
+    $redactor = new SensitiveMessageRedactor;
+
     $this->recorder = new AnalyticsErrorRecorder(
         new RequestExclusionChecker,
-        new ErrorFingerprintGenerator,
-        new SafeExceptionMetadataExtractor,
+        new ErrorFingerprintGenerator($redactor),
+        new SafeExceptionMetadataExtractor($redactor),
     );
 });
 

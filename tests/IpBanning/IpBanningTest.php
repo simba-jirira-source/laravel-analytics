@@ -59,12 +59,32 @@ it('does not block requests after an ip is unbanned', function () {
         ->assertOk();
 });
 
-it('allows access to ignored analytics dashboard routes', function () {
+it('blocks banned ips from the analytics dashboard by default', function () {
+    IpBan::factory()->create(['ip_address' => '203.0.113.10']);
+
+    $this->withClientIp('203.0.113.10')
+        ->get('/analytics')
+        ->assertForbidden();
+});
+
+it('allows banned ips to reach configured bypass paths', function () {
+    config(['analytics.ip_banning.bypass_paths' => ['analytics', 'analytics/*']]);
+
     IpBan::factory()->create(['ip_address' => '203.0.113.10']);
 
     $this->withClientIp('203.0.113.10')
         ->get('/analytics')
         ->assertOk();
+});
+
+it('falls back to 403 for invalid blocked status codes', function () {
+    config(['analytics.ip_banning.blocked_status' => 200]);
+
+    IpBan::factory()->create(['ip_address' => '203.0.113.10']);
+
+    $this->withClientIp('203.0.113.10')
+        ->get('/public-page')
+        ->assertForbidden();
 });
 
 it('returns the configured blocked status code', function () {

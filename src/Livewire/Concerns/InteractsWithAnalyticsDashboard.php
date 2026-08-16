@@ -8,11 +8,16 @@ use InvalidArgumentException;
 use LaravelAnalytics\LaravelAnalytics\Support\DashboardAuthorizer;
 use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
 
+/**
+ * @property string $from
+ * @property string $to
+ */
 trait InteractsWithAnalyticsDashboard
 {
-    public string $from = '';
-
-    public string $to = '';
+    public function bootInteractsWithAnalyticsDashboard(): void
+    {
+        $this->authorizeDashboardAction();
+    }
 
     protected function dashboardDateRange(): DashboardDateRange
     {

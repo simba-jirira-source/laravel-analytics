@@ -55,3 +55,17 @@ it('evaluates full request exclusion', function () {
 
     expect($this->checker->shouldTrackRequest($request))->toBeFalse();
 });
+
+it('does not bypass ip bans using ignored tracking paths by default', function () {
+    $request = Request::create('/analytics', 'GET');
+
+    expect($this->checker->shouldBypassIpBan($request))->toBeFalse();
+});
+
+it('bypasses ip bans for configured paths', function () {
+    config(['analytics.ip_banning.bypass_paths' => ['analytics', 'analytics/*']]);
+
+    $request = Request::create('/analytics/dashboard', 'GET');
+
+    expect($this->checker->shouldBypassIpBan($request))->toBeTrue();
+});

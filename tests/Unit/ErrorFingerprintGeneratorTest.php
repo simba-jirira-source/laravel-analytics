@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
+use LaravelAnalytics\LaravelAnalytics\Support\SensitiveMessageRedactor;
 
 beforeEach(function () {
-    $this->generator = new ErrorFingerprintGenerator;
+    $this->generator = new ErrorFingerprintGenerator(new SensitiveMessageRedactor);
 });
 
 it('generates stable fingerprints for identical exceptions', function () {

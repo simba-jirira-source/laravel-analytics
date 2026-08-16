@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Gate;
 use LaravelAnalytics\LaravelAnalytics\Livewire\AnalyticsDashboard;
+use LaravelAnalytics\LaravelAnalytics\Livewire\ErrorDetails;
 use LaravelAnalytics\LaravelAnalytics\Livewire\IpBanManager;
+use LaravelAnalytics\LaravelAnalytics\Livewire\RecentErrors;
 use LaravelAnalytics\LaravelAnalytics\Livewire\TrafficOverview;
 use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
 use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
 use LaravelAnalytics\LaravelAnalytics\Models\PageView;
+use LaravelAnalytics\LaravelAnalytics\Tests\Support\DashboardUser;
 use Livewire\Livewire;
 
 it('renders dashboard overview metrics', function () {
@@ -69,9 +73,32 @@ it('rejects invalid ip addresses in the ban manager', function () {
         ->assertHasErrors(['ipAddress']);
 });
 
+it('forbids guest users from dashboard components', function () {
+    Livewire::test(TrafficOverview::class)
+        ->assertForbidden();
+
+    Livewire::test(RecentErrors::class)
+        ->assertForbidden();
+});
+
+it('forbids unauthorized authenticated users from dashboard components', function () {
+    Gate::define('viewAnalyticsDashboard', fn (): bool => false);
+
+    Livewire::actingAs($this->dashboardUser())
+        ->test(TrafficOverview::class)
+        ->assertForbidden();
+})->after(function (): void {
+    Gate::define('viewAnalyticsDashboard', fn (?DashboardUser $user = null): bool => $user !== null);
+});
+
+it('forbids guest users from viewing error details', function () {
+    $error = AnalyticsError::factory()->create();
+
+    Livewire::test(ErrorDetails::class, ['error' => $error])
+        ->assertForbidden();
+});
+
 it('forbids guest users from mutating ip bans', function () {
     Livewire::test(IpBanManager::class)
-        ->set('ipAddress', '203.0.113.10')
-        ->call('banIp')
         ->assertForbidden();
 });

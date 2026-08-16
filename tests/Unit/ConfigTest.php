@@ -34,9 +34,9 @@ it('defines retention defaults', function () {
         ->and(config('analytics.retention.prune_ip_bans'))->toBeTrue();
 });
 
-it('does not bind a host user model by default', function () {
-    expect(config('analytics.user.model'))->toBeNull()
-        ->and(config('analytics.user.foreign_key'))->toBe('user_id');
+it('defines ip ban bypass defaults', function () {
+    expect(config('analytics.ip_banning.bypass_paths'))->toBe([])
+        ->and(config('analytics.ip_banning.bypass_route_names'))->toBe([]);
 });
 
 it('allows host applications to override merged config', function () {

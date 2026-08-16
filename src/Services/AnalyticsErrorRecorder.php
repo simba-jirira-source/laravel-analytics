@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace LaravelAnalytics\LaravelAnalytics\Services;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
 use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
@@ -31,27 +33,51 @@ class AnalyticsErrorRecorder implements ErrorRecorder
         $fingerprint = $this->fingerprintGenerator->generate($throwable);
         $occurredAt = Carbon::now();
 
-        $error = AnalyticsError::query()->firstOrNew([
-            'fingerprint' => $fingerprint,
-        ]);
+        $updated = AnalyticsError::query()
+            ->where('fingerprint', $fingerprint)
+            ->update([
+                'last_occurred_at' => $occurredAt,
+                'occurrence_count' => DB::raw('occurrence_count + 1'),
+                'message' => $metadata['message'],
+                'status_code' => $metadata['status_code'],
+            ]);
 
-        if (! $error->exists) {
-            $error->fill([
+        if ($updated > 0) {
+            return;
+        }
+
+        try {
+            AnalyticsError::query()->create([
                 ...$metadata,
                 'fingerprint' => $fingerprint,
                 'first_occurred_at' => $occurredAt,
                 'last_occurred_at' => $occurredAt,
                 'occurrence_count' => 1,
-            ])->save();
+            ]);
+        } catch (QueryException $exception) {
+            if (! $this->isUniqueConstraintViolation($exception)) {
+                throw $exception;
+            }
 
-            return;
+            AnalyticsError::query()
+                ->where('fingerprint', $fingerprint)
+                ->update([
+                    'last_occurred_at' => $occurredAt,
+                    'occurrence_count' => DB::raw('occurrence_count + 1'),
+                    'message' => $metadata['message'],
+                    'status_code' => $metadata['status_code'],
+                ]);
+        }
+    }
+
+    protected function isUniqueConstraintViolation(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? null;
+
+        if ($sqlState === '23000') {
+            return true;
         }
 
-        $error->forceFill([
-            'last_occurred_at' => $occurredAt,
-            'occurrence_count' => $error->occurrence_count + 1,
-            'message' => $metadata['message'],
-            'status_code' => $metadata['status_code'],
-        ])->save();
+        return ($exception->errorInfo[1] ?? null) === 1062;
     }
 }

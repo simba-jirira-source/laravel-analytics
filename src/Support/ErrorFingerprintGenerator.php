@@ -8,6 +8,10 @@ use Throwable;
 
 class ErrorFingerprintGenerator
 {
+    public function __construct(
+        protected SensitiveMessageRedactor $messageRedactor,
+    ) {}
+
     public function generate(Throwable $throwable): string
     {
         $components = [
@@ -22,12 +26,6 @@ class ErrorFingerprintGenerator
 
     protected function normalizeMessage(string $message): string
     {
-        $redacted = preg_replace(
-            '/\b(password|token|secret|authorization|api_key|bearer)\s*[:=]\s*\S+/i',
-            '$1=[redacted]',
-            $message,
-        );
-
-        return trim($redacted ?? $message);
+        return $this->messageRedactor->redact($message);
     }
 }

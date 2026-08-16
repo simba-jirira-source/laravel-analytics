@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace LaravelAnalytics\LaravelAnalytics\Livewire;
 
 use Illuminate\View\View;
+use LaravelAnalytics\LaravelAnalytics\Livewire\Concerns\InteractsWithAnalyticsDashboard;
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
 use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
 use Livewire\Component;
 
 class TopReferrers extends Component
 {
+    use InteractsWithAnalyticsDashboard;
+
     public string $from = '';
 
     public string $to = '';
