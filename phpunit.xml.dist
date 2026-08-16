@@ -37,6 +37,9 @@
         <testsuite name="Retention">
             <directory>tests/Retention</directory>
         </testsuite>
+        <testsuite name="Dashboard">
+            <directory>tests/Dashboard</directory>
+        </testsuite>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>

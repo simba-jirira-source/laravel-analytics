@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LaravelAnalytics\LaravelAnalytics\Services;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use LaravelAnalytics\LaravelAnalytics\Models\AnalyticsError;
+use LaravelAnalytics\LaravelAnalytics\Models\IpBan;
+use LaravelAnalytics\LaravelAnalytics\Models\PageView;
+use LaravelAnalytics\LaravelAnalytics\Support\DashboardDateRange;
+use stdClass;
+
+class AnalyticsDashboardQuery
+{
+    /**
+     * @return array{
+     *     page_views: int,
+     *     unique_visitors: int,
+     *     visits: int,
+     *     errors: int,
+     *     active_bans: int
+     * }
+     */
+    public function overviewMetrics(DashboardDateRange $range): array
+    {
+        $pageViewsQuery = PageView::query()->whereBetween('viewed_at', [$range->from, $range->to]);
+
+        return [
+            'page_views' => (clone $pageViewsQuery)->count(),
+            'unique_visitors' => PageView::query()
+                ->whereBetween('viewed_at', [$range->from, $range->to])
+                ->distinct('visitor_hash')
+                ->count('visitor_hash'),
+            'visits' => (clone $pageViewsQuery)->distinct('visitor_hash')->count('visitor_hash'),
+            'errors' => AnalyticsError::query()
+                ->whereBetween('last_occurred_at', [$range->from, $range->to])
+                ->count(),
+            'active_bans' => IpBan::query()->active()->count(),
+        ];
+    }
+
+    /**
+     * @return Collection<int, stdClass>
+     */
+    public function trafficTrend(DashboardDateRange $range): Collection
+    {
+        return PageView::query()
+            ->selectRaw('DATE(viewed_at) as date, COUNT(*) as total')
+            ->whereBetween('viewed_at', [$range->from, $range->to])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->toBase()
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, stdClass>
+     */
+    public function topPages(DashboardDateRange $range, int $limit = 10): Collection
+    {
+        return PageView::query()
+            ->select('path', DB::raw('COUNT(*) as views'))
+            ->whereBetween('viewed_at', [$range->from, $range->to])
+            ->groupBy('path')
+            ->orderByDesc('views')
+            ->limit($limit)
+            ->toBase()
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, stdClass>
+     */
+    public function topReferrers(DashboardDateRange $range, int $limit = 10): Collection
+    {
+        return PageView::query()
+            ->select('referrer_host', DB::raw('COUNT(*) as views'))
+            ->whereBetween('viewed_at', [$range->from, $range->to])
+            ->whereNotNull('referrer_host')
+            ->where('referrer_host', '!=', '')
+            ->groupBy('referrer_host')
+            ->orderByDesc('views')
+            ->limit($limit)
+            ->toBase()
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, stdClass>
+     */
+    public function statusBreakdown(DashboardDateRange $range): Collection
+    {
+        return PageView::query()
+            ->select('status_code', DB::raw('COUNT(*) as total'))
+            ->whereBetween('viewed_at', [$range->from, $range->to])
+            ->groupBy('status_code')
+            ->orderBy('status_code')
+            ->toBase()
+            ->get();
+    }
+
+    /**
+     * @return Builder<AnalyticsError>
+     */
+    public function recentErrorsQuery(DashboardDateRange $range): Builder
+    {
+        return AnalyticsError::query()
+            ->whereBetween('last_occurred_at', [$range->from, $range->to])
+            ->orderByDesc('last_occurred_at');
+    }
+
+    /**
+     * @return Builder<IpBan>
+     */
+    public function ipBansQuery(): Builder
+    {
+        return IpBan::query()->orderByDesc('banned_at');
+    }
+}

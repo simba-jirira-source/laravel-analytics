@@ -14,9 +14,20 @@ use LaravelAnalytics\LaravelAnalytics\Console\Commands\AnalyticsPruneCommand;
 use LaravelAnalytics\LaravelAnalytics\Contracts\AnalyticsRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\ErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Contracts\VisitorIdentifier;
+use LaravelAnalytics\LaravelAnalytics\Http\Middleware\AuthorizeAnalyticsDashboard;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\EnforceIpBanMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\RecordErrorsMiddleware;
 use LaravelAnalytics\LaravelAnalytics\Http\Middleware\TrackTrafficMiddleware;
+use LaravelAnalytics\LaravelAnalytics\Livewire\AnalyticsDashboard;
+use LaravelAnalytics\LaravelAnalytics\Livewire\ErrorDetails;
+use LaravelAnalytics\LaravelAnalytics\Livewire\IpBanManager;
+use LaravelAnalytics\LaravelAnalytics\Livewire\RecentErrors;
+use LaravelAnalytics\LaravelAnalytics\Livewire\StatusBreakdown;
+use LaravelAnalytics\LaravelAnalytics\Livewire\TopPages;
+use LaravelAnalytics\LaravelAnalytics\Livewire\TopReferrers;
+use LaravelAnalytics\LaravelAnalytics\Livewire\TrafficChart;
+use LaravelAnalytics\LaravelAnalytics\Livewire\TrafficOverview;
+use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsDashboardQuery;
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsErrorRecorder;
 use LaravelAnalytics\LaravelAnalytics\Services\AnalyticsPruner;
 use LaravelAnalytics\LaravelAnalytics\Services\IpBanService;
@@ -25,12 +36,15 @@ use LaravelAnalytics\LaravelAnalytics\Services\PageViewRecorder;
 use LaravelAnalytics\LaravelAnalytics\Services\VisitorAnalytics;
 use LaravelAnalytics\LaravelAnalytics\Services\VisitorService;
 use LaravelAnalytics\LaravelAnalytics\Support\AnalyticsHashSalt;
+use LaravelAnalytics\LaravelAnalytics\Support\DashboardAuthorizer;
 use LaravelAnalytics\LaravelAnalytics\Support\DefaultVisitorIdentifier;
 use LaravelAnalytics\LaravelAnalytics\Support\ErrorFingerprintGenerator;
 use LaravelAnalytics\LaravelAnalytics\Support\IpAddressNormalizer;
 use LaravelAnalytics\LaravelAnalytics\Support\IpAddressValidator;
 use LaravelAnalytics\LaravelAnalytics\Support\RequestExclusionChecker;
 use LaravelAnalytics\LaravelAnalytics\Support\SafeExceptionMetadataExtractor;
+use Livewire\Component;
+use Livewire\Livewire;
 
 class LaravelAnalyticsServiceProvider extends ServiceProvider
 {
@@ -62,6 +76,8 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
             return $app->make($class);
         });
 
+        $this->app->singleton(DashboardAuthorizer::class);
+        $this->app->singleton(AnalyticsDashboardQuery::class);
         $this->app->singleton(VisitorService::class);
         $this->app->singleton(VisitorAnalytics::class);
         $this->app->singleton(PageViewRecorder::class);
@@ -79,11 +95,13 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/dashboard.php');
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'analytics');
 
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'analytics');
 
+        $this->configureLivewire();
         $this->configureMiddleware();
 
         if (! $this->app->runningInConsole()) {
@@ -118,6 +136,41 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         ]);
     }
 
+    protected function configureLivewire(): void
+    {
+        if (! class_exists(Livewire::class)) {
+            return;
+        }
+
+        $this->app->booted(function (): void {
+            if (! $this->app->bound('livewire')) {
+                return;
+            }
+
+            foreach ($this->livewireComponents() as $name => $class) {
+                Livewire::addComponent($name, class: $class);
+            }
+        });
+    }
+
+    /**
+     * @return array<string, class-string<Component>>
+     */
+    protected function livewireComponents(): array
+    {
+        return [
+            'analytics.analytics-dashboard' => AnalyticsDashboard::class,
+            'analytics.traffic-overview' => TrafficOverview::class,
+            'analytics.traffic-chart' => TrafficChart::class,
+            'analytics.top-pages' => TopPages::class,
+            'analytics.top-referrers' => TopReferrers::class,
+            'analytics.status-breakdown' => StatusBreakdown::class,
+            'analytics.recent-errors' => RecentErrors::class,
+            'analytics.error-details' => ErrorDetails::class,
+            'analytics.ip-ban-manager' => IpBanManager::class,
+        ];
+    }
+
     protected function configureMiddleware(): void
     {
         /** @var Router $router */
@@ -126,6 +179,7 @@ class LaravelAnalyticsServiceProvider extends ServiceProvider
         $router->aliasMiddleware('analytics.track-traffic', TrackTrafficMiddleware::class);
         $router->aliasMiddleware('analytics.record-errors', RecordErrorsMiddleware::class);
         $router->aliasMiddleware('analytics.enforce-ip-ban', EnforceIpBanMiddleware::class);
+        $router->aliasMiddleware('analytics.dashboard', AuthorizeAnalyticsDashboard::class);
 
         if (config('analytics.enabled') && config('analytics.ip_banning.enabled')) {
             $router->prependMiddlewareToGroup('web', EnforceIpBanMiddleware::class);

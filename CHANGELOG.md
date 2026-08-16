@@ -4,6 +4,10 @@
 
 ### Added
 
+- Optional Livewire 4 analytics dashboard with Tailwind-compatible Blade views, date filters, pagination, error details, and IP ban management.
+- `AnalyticsDashboardQuery`, `DashboardAuthorizer`, `AuthorizeAnalyticsDashboard` middleware, and `routes/dashboard.php` (opt-in via config).
+- Livewire components under `analytics.*` namespace; gate or invokable authorization support.
+- Dashboard Pest/Livewire tests (`tests/Dashboard/*`, `DashboardAuthorizerTest`, `AnalyticsDashboardQueryTest`).
 - Configurable analytics retention pruning via `AnalyticsPruner` and `analytics:prune`.
 - `docs/RETENTION.md` with retention settings and host-application scheduling guidance.
 - Optional IP banning via `EnforceIpBanMiddleware`, `IpBanService`, and `IpUnbanService`.
@@ -18,6 +22,8 @@
 
 ### Changed
 
+- Added `livewire/livewire`, `illuminate/auth`, `illuminate/view`, and `illuminate/validation` runtime dependencies for the dashboard.
+- `composer test` now runs `@prepare` before static analysis so Larastan resolves package views.
 - `RequestExclusionChecker` supports error tracking enablement, IP ban bypass rules, analytics route exclusions, and precise package-recorder failure detection.
 - `PageViewRecorder` delegates visitor persistence to `VisitorService`.
 - `DefaultVisitorIdentifier` uses salt + normalized IP + optional UA/auth components.
